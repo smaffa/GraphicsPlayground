@@ -50,6 +50,9 @@ public class SketchPad extends JPanel {
     final static BasicStroke traceStroke = 
     		new BasicStroke(2.0f);
     
+    private int canvasWidth = Constants.CANVAS_WIDTH;
+    private int canvasHeight = Constants.CANVAS_HEIGHT;
+    
 
     public SketchPad() {
         setBorder(BorderFactory.createLineBorder(Color.BLACK));
@@ -67,11 +70,7 @@ public class SketchPad extends JPanel {
                             currentBezierCreationList.add(nextSelectionIndex);
                             if (currentBezierCreationList.size() == 4) {
                                 // if we reach 4 points, create the curve and reset the creation array
-                                bezierControlIndices.add(new ArrayList<>(currentBezierCreationList));
-                                bezierCurves.add(new CubicBezierCurve(controlPoints.get(currentBezierCreationList.get(0)),
-                                        controlPoints.get(currentBezierCreationList.get(1)),
-                                        controlPoints.get(currentBezierCreationList.get(2)),
-                                        controlPoints.get(currentBezierCreationList.get(3))));
+                            	createBezierCurve(currentBezierCreationList);
                                 currentBezierCreationList.clear();
                             }
                         }
@@ -94,6 +93,48 @@ public class SketchPad extends JPanel {
         });
     }
 
+    public SketchPad(int width, int height) {
+    	this.canvasWidth = width;
+    	this.canvasHeight = height;
+    	
+        setBorder(BorderFactory.createLineBorder(Color.BLACK));
+
+        addMouseListener(new MouseAdapter() {
+            @Override
+            public void mousePressed(MouseEvent e) {
+                if (isBezierCreationModeOn) {
+                    int nextSelectionIndex = getBoundingPointIndex(e.getX(), e.getY());
+                    if (nextSelectionIndex != Constants.NULL_INDEX) {
+                        // if next selection is an already-selected point, remove it from the creation list
+                        if (currentBezierCreationList.contains(nextSelectionIndex)) {
+                            currentBezierCreationList.remove(Integer.valueOf(nextSelectionIndex));
+                        } else { // add it to the list
+                            currentBezierCreationList.add(nextSelectionIndex);
+                            if (currentBezierCreationList.size() == 4) {
+                                // if we reach 4 points, create the curve and reset the creation array
+                            	createBezierCurve(currentBezierCreationList);
+                                currentBezierCreationList.clear();
+                            }
+                        }
+                        repaint();
+                    }
+                } else {
+                    selectedIndex = getBoundingPointIndex(e.getX(), e.getY());
+                    repaint();
+                }
+            }
+        });
+
+        addMouseMotionListener(new MouseAdapter() {
+            @Override
+            public void mouseDragged(MouseEvent e) {
+                if (selectedIndex != Constants.NULL_INDEX & selectedIndex < controlPoints.size()) {
+                    movePoint(e.getX(), e.getY());
+                }
+            }
+        });
+    }
+    
     /**
      * Obtains the index in 'controlPoints' of the object which bounds the provided coordinates
      *
@@ -114,9 +155,19 @@ public class SketchPad extends JPanel {
         repaint();
     }
 
+    public void createBezierCurve(ArrayList<Integer> controlIndices) {
+    	if (controlIndices.size() == 4) {
+    		bezierControlIndices.add(new ArrayList<Integer>(controlIndices));
+    		bezierCurves.add(new CubicBezierCurve(controlPoints.get(controlIndices.get(0)),
+                    controlPoints.get(controlIndices.get(1)),
+                    controlPoints.get(controlIndices.get(2)),
+                    controlPoints.get(controlIndices.get(3))));
+    	}
+    }
+    
     public void addRandomPoint() {
-        int x = ThreadLocalRandom.current().nextInt(0, Constants.CANVAS_WIDTH + 1);
-        int y = ThreadLocalRandom.current().nextInt(0, Constants.CANVAS_HEIGHT + 1);
+        int x = ThreadLocalRandom.current().nextInt(0, this.canvasWidth + 1);
+        int y = ThreadLocalRandom.current().nextInt(0, this.canvasHeight + 1);
         controlPoints.add(new CanvasPoint(x, y));
         selectedIndex = controlPoints.size() - 1;
         repaint();
@@ -158,7 +209,7 @@ public class SketchPad extends JPanel {
     }
 
     public Dimension getPreferredSize() {
-        return new Dimension(Constants.CANVAS_WIDTH, Constants.CANVAS_HEIGHT);
+        return new Dimension(this.canvasWidth, this.canvasHeight);
     }
     
     public void drawBezierCurve(Graphics2D g2d, BezierCurve c) {

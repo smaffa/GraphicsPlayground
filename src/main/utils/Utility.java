@@ -12,4 +12,12 @@ public class Utility {
         double yLerp = lerp(p1.getY(), p2.getY(), t);
         return new Point2D.Double(xLerp, yLerp);
     }
+    
+    public static double[] linspace(double min, double max, int n) {
+    	double[] values = new double[n];
+    	for (int i = 0; i < n; i++) {
+    		values[i] = lerp(min, max, i / (double) (n-1));
+    	}
+    	return values;
+    }
 }
