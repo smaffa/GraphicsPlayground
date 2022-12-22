@@ -1,4 +1,4 @@
-package main.sketch.plots;
+package main.shapes;
 
 import java.awt.Color;
 import java.awt.geom.Point2D;

@@ -3,6 +3,8 @@ package main.sketch.plots;
 import java.util.ArrayList;
 import java.util.Collection;
 
+import main.shapes.PlotLine;
+
 import java.awt.geom.Line2D;
 import java.awt.geom.Point2D;
 import java.awt.*;
@@ -24,8 +26,6 @@ public class LinePlot extends GraphicsPlot {
 	private double axisX = this.figHeight / 2; // y coordinate of x-axis
 	private double axisY = this.figWidth / 2; // 
 	
-	private double[] transformValues = new double[3];
-	
 	public LinePlot() {	}
 	
 	public LinePlot(int width, int height) {
@@ -33,8 +33,18 @@ public class LinePlot extends GraphicsPlot {
 		this.figHeight = height;
 	}
 	
-	public void addLine(Collection<Point2D> trace, Color c) {
+	public int addLine(PlotLine line) {
+		lines.add(line);
+		return lines.size();
+	}
+	
+	public int addLine(Collection<Point2D> trace, Color c) {
 		lines.add(new PlotLine(trace, c));
+		return lines.size();
+	}
+	
+	public void setLine(int idx, PlotLine line) {
+		lines.set(idx, line);
 	}
 	
 	@Override

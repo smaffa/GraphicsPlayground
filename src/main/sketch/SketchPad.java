@@ -128,7 +128,7 @@ public class SketchPad extends JPanel {
         addMouseMotionListener(new MouseAdapter() {
             @Override
             public void mouseDragged(MouseEvent e) {
-                if (selectedIndex != Constants.NULL_INDEX & selectedIndex < controlPoints.size()) {
+                if (isPointSelected()) {
                     movePoint(e.getX(), e.getY());
                 }
             }
@@ -150,7 +150,7 @@ public class SketchPad extends JPanel {
         return Constants.NULL_INDEX;
     }
 
-    private void movePoint(int x, int y) {
+    public void movePoint(int x, int y) {
         controlPoints.get(this.selectedIndex).setLocation(x, y);
         repaint();
     }
@@ -230,13 +230,12 @@ public class SketchPad extends JPanel {
             g2d.draw(new Line2D.Double(curveControls[2].getX(), curveControls[2].getY(),
                     curveControls[3].getX(), curveControls[3].getY()));
             
-            c.computeCurve();
-            Point2D[] tracePoints = c.getTraceArray();
+            Point2D[] tracePoints = c.computePosition();
             
             if (showT & showReferenceLines) {
             	g2d.setStroke(referenceStroke); 
             	// draw all the other reference lines at T and their points
-            	Point2D[] referencePoints = c.getAllPointsAtT(globalT);
+            	Point2D[] referencePoints = c.computeLerpsAtT(globalT);
             	int maxOrder = c.getOrder();
             	int orderCounter = c.getOrder();
             	int refPointIdx = referencePoints.length - 1;
@@ -265,7 +264,7 @@ public class SketchPad extends JPanel {
             }
             
             if (showT) {
-            	drawPoint(g2d, c.getAllPointsAtT(globalT)[0], tPointColor, false);
+            	drawPoint(g2d, c.computeLerpsAtT(globalT)[0], tPointColor, false);
             }
     	}
     }
@@ -288,8 +287,6 @@ public class SketchPad extends JPanel {
         Graphics2D g2d = (Graphics2D) g;
         super.paintComponent(g);
 
-        double offset = Constants.POINT_RADIUS;
-
         // draw points
         if (isBezierCreationModeOn) {
             for (CanvasPoint point : controlPoints) {
@@ -299,7 +296,15 @@ public class SketchPad extends JPanel {
             for (int i = 0; i < currentBezierCreationList.size(); i++) {
                 int controlPointIndex = currentBezierCreationList.get(i);
                 CanvasPoint point = controlPoints.get(controlPointIndex);
-                g2d.drawString(Integer.toString(i), (int) (point.getX() + Constants.POINT_RADIUS), (int) (point.getY() - Constants.POINT_RADIUS));
+                if (i == 0) {
+                    g2d.drawString("P1", (int) (point.getX() + Constants.POINT_RADIUS), (int) (point.getY() - Constants.POINT_RADIUS));
+                } else if (i == 1) {
+                    g2d.drawString("C1", (int) (point.getX() + Constants.POINT_RADIUS), (int) (point.getY() - Constants.POINT_RADIUS));
+                } else if (i == 2) {
+                    g2d.drawString("C2", (int) (point.getX() + Constants.POINT_RADIUS), (int) (point.getY() - Constants.POINT_RADIUS));
+                } else if (i == 3) {
+                    g2d.drawString("P2", (int) (point.getX() + Constants.POINT_RADIUS), (int) (point.getY() - Constants.POINT_RADIUS));  	
+                }
             }
         } else {
             for (int i = 0; i < controlPoints.size(); i++) {
@@ -355,4 +360,12 @@ public class SketchPad extends JPanel {
     	this.showReferenceLines = isOn;
     	repaint();
     }
+	
+	public boolean isPointSelected() {
+		return this.selectedIndex != Constants.NULL_INDEX & selectedIndex < controlPoints.size();
+	}
+	
+	public ArrayList<BezierCurve> getBezierCurves() {
+		return this.bezierCurves;
+	}
 }

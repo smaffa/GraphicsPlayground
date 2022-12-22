@@ -1,9 +1,9 @@
 package main;
 
-import programs.BezierCreator;
-import programs.DerivativeExplorer;
-
 import javax.swing.*;
+
+import main.programs.BezierCreator;
+import main.programs.DerivativeExplorer;
 
 public class Run {
 	private static boolean isDev = false;

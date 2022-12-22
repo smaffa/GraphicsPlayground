@@ -1,4 +1,4 @@
-package programs;
+package main.programs;
 
 import java.awt.BorderLayout;
 import java.awt.Container;
