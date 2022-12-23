@@ -34,6 +34,7 @@ public class DerivativeExplorer implements Runnable {
 	private LinePlot positionPlot = new LinePlot();
 	private LinePlot velocityPlot = new LinePlot();
 	private SketchPad sketchPad = new SketchPad(positionPlot.getFigureWidth(), positionPlot.getFigureWidth());
+	private double globalT = 0;
 	
 	public DerivativeExplorer() {
 		sketchPad.addRandomPoint();
@@ -41,22 +42,29 @@ public class DerivativeExplorer implements Runnable {
 		sketchPad.addRandomPoint();
 		sketchPad.addRandomPoint();
 		sketchPad.createBezierCurve(new ArrayList<Integer>(Arrays.asList(0, 1, 2, 3)));
+		sketchPad.setShowT(true);
+		sketchPad.setT(globalT);
 		
-		curve = sketchPad.getBezierCurves().get(0);
+		curve = Utility.invertYCoordinates((CubicBezierCurve) sketchPad.getBezierCurves().get(0), sketchPad.getCanvasHeight());
 		CubicBezierCurve curveCopy = new CubicBezierCurve((CubicBezierCurve) curve);
-		curveCopy.reflect(1, 0).centerAtP1().scale(1.0 / positionPlot.getFigureWidth(), 1.0 / positionPlot.getFigureHeight());
+		curveCopy.centerAtP1();
 		positionPlot.addLine(new PlotLine(Arrays.asList(curveCopy.computePosition()), Color.BLUE));
 		velocityPlot.addLine(new PlotLine(Arrays.asList(curveCopy.computeVelocity()), Color.BLUE));
+		
+		positionPlot.setShowT(true);
+		positionPlot.setT(globalT);
+		velocityPlot.setShowT(true);
+		positionPlot.setT(globalT);
 		
 		sketchPad.addMouseMotionListener(new MouseAdapter() {
             @Override
             public void mouseDragged(MouseEvent e) {
                 if (sketchPad.isPointSelected()) {
                     sketchPad.movePoint(e.getX(), e.getY());
-                    curve = sketchPad.getBezierCurves().get(0);
+                    curve = Utility.invertYCoordinates((CubicBezierCurve) sketchPad.getBezierCurves().get(0), sketchPad.getCanvasHeight());
                     
                     CubicBezierCurve curveCopy = new CubicBezierCurve((CubicBezierCurve) curve);
-                    curveCopy.reflect(1, 0).centerAtP1().scale(1.0 / positionPlot.getFigureWidth(), 1.0 / positionPlot.getFigureHeight());
+                    curveCopy.centerAtP1();
                     
                     positionPlot.setLine(0, new PlotLine(Arrays.asList(curveCopy.computePosition()), Color.BLUE));
                     positionPlot.repaint();

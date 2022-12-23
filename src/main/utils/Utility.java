@@ -2,6 +2,8 @@ package main.utils;
 
 import java.awt.geom.Point2D;
 
+import main.shapes.CubicBezierCurve;
+
 public class Utility {
     public static double lerp(double a, double b, double t) {
         return a + (t * (b - a));
@@ -20,4 +22,17 @@ public class Utility {
     	}
     	return values;
     }
+    
+    public static CubicBezierCurve invertYCoordinates(CubicBezierCurve curve, int figHeight) {
+		CubicBezierCurve invertedCurve = new CubicBezierCurve(curve);
+		invertedCurve.setP1(invertYCoordinates(invertedCurve.getP1(), figHeight));
+		invertedCurve.setC1(invertYCoordinates(invertedCurve.getC1(), figHeight));
+		invertedCurve.setC2(invertYCoordinates(invertedCurve.getC2(), figHeight));
+		invertedCurve.setP2(invertYCoordinates(invertedCurve.getP2(), figHeight));
+		return invertedCurve;
+	}
+	
+	public static Point2D invertYCoordinates(Point2D pt, int figHeight) {
+		return new Point2D.Double(pt.getX(), figHeight - pt.getY());
+	}
 }

@@ -48,11 +48,10 @@ public class SketchPad extends JPanel {
     final static BasicStroke referenceStroke = 
     		new BasicStroke(); 
     final static BasicStroke traceStroke = 
-    		new BasicStroke(2.0f);
+    		new BasicStroke(2.0f); 
     
     private int canvasWidth = Constants.CANVAS_WIDTH;
     private int canvasHeight = Constants.CANVAS_HEIGHT;
-    
 
     public SketchPad() {
         setBorder(BorderFactory.createLineBorder(Color.BLACK));
@@ -367,5 +366,21 @@ public class SketchPad extends JPanel {
 	
 	public ArrayList<BezierCurve> getBezierCurves() {
 		return this.bezierCurves;
+	}
+	
+    public int getCanvasWidth() {
+		return canvasWidth;
+	}
+
+	public void setCanvasWidth(int canvasWidth) {
+		this.canvasWidth = canvasWidth;
+	}
+
+	public int getCanvasHeight() {
+		return canvasHeight;
+	}
+
+	public void setCanvasHeight(int canvasHeight) {
+		this.canvasHeight = canvasHeight;
 	}
 }

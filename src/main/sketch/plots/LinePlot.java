@@ -4,7 +4,10 @@ import java.util.ArrayList;
 import java.util.Collection;
 
 import main.shapes.PlotLine;
+import main.utils.Constants;
+import main.utils.Utility;
 
+import java.awt.geom.Ellipse2D;
 import java.awt.geom.Line2D;
 import java.awt.geom.Point2D;
 import java.awt.*;
@@ -21,16 +24,39 @@ public class LinePlot extends GraphicsPlot {
 	
 	private int figWidth = 500;
 	private int figHeight = 500;
-	private final double border = 0.05;
+	private double borderProportion = 0.05;
 	
 	private double axisX = this.figHeight / 2; // y coordinate of x-axis
 	private double axisY = this.figWidth / 2; // 
 	
-	public LinePlot() {	}
+	private boolean showT = false;
+	private double t;
+	
+	public LinePlot() {}
 	
 	public LinePlot(int width, int height) {
 		this.figWidth = width;
 		this.figHeight = height;
+		this.axisY = width / 2;
+		this.axisX = height / 2;
+	}
+	
+	public LinePlot(int width, int height, double axisY, double axisX, double border) {
+		this.figWidth = width;
+		this.figHeight = height;
+		if (0 <= border & border < 0.5) {
+			this.borderProportion = border;
+		}
+		if (this.borderProportion * width < axisY & axisY < (1 - this.borderProportion) * width) {
+			this.axisY = axisY;
+		} else {
+			this.axisY = width / 2;
+		}
+		if (this.borderProportion * height < axisX & axisX < (1 - this.borderProportion) * height) {
+			this.axisX = axisX;
+		} else {
+			this.axisX = height / 2;
+		}
 	}
 	
 	public int addLine(PlotLine line) {
@@ -49,51 +75,55 @@ public class LinePlot extends GraphicsPlot {
 	
 	@Override
 	public void computePlotProjection() {
+		
+		// choose a scale so that all lines fit in the border
 		double minX = Double.MAX_VALUE;
 		double minY = Double.MAX_VALUE;
 		double maxX = Double.MIN_VALUE;
 		double maxY = Double.MIN_VALUE;
 		
-		for (PlotLine line : lines) {
-			Point2D maxPoint = line.getMaxPoint();
-			Point2D minPoint = line.getMinPoint();
-			
-			if (minPoint.getX() < minX) {
-				minX = minPoint.getX();
+		for (PlotLine line : lines) {	
+			if (line.getMinX() < minX) {
+				minX = line.getMinX();
 			}
-			if (maxPoint.getX() > maxX) {
-				maxX = maxPoint.getX();
+			if (line.getMaxX() > maxX) {
+				maxX = line.getMaxX();
 			}
-			if (minPoint.getY() < minY) {
-				minY = minPoint.getY();
+			if (line.getMinY() < minY) {
+				minY = line.getMinY();
 			}
-			if (maxPoint.getY() > maxY) {
-				maxY = maxPoint.getY();
+			if (line.getMaxY() > maxY) {
+				maxY = line.getMaxY();
 			}
 		}
 		
-		// use the long axis to fit the scale
-		// check both axes' scale factor and use the more extreme scaling
-		double borderXRange = (1 - (2 * border)) * figWidth;
-		double borderYRange = (1 - (2 * border)) * figHeight;
-		double xRange = maxX - minX;
-		double yRange = maxY - minY;
+		// the negative range is the axis shift
+		// the positive range is the remaining space
+		double posBorderX = (this.figWidth - this.axisY) - (this.borderProportion * this.figWidth);
+		double negBorderX = (this.borderProportion * this.figWidth) - this.axisY;
+		double posBorderY = (this.figHeight - this.axisX) - (this.borderProportion * this.figHeight);
+		double negBorderY = (this.borderProportion * this.figHeight) - this.axisX;
 		
-		double xScale = borderXRange / xRange;
-		double yScale = borderYRange / yRange;
-		
-		double overallScale;
-		if (xScale < yScale) {
-			overallScale = xScale;
-		} else {
-			overallScale = yScale;
+		double minBorderRatio = Double.MAX_VALUE;
+		if (minX != 0 & negBorderX / minX > 0) {
+			minBorderRatio = negBorderX / minX;
 		}
+		if (maxX != 0 & posBorderX / maxX > 0 & posBorderX / maxX < minBorderRatio) {
+			minBorderRatio = posBorderX / maxX;
+		}
+		if (minY != 0 & negBorderY / minY > 0 & negBorderY / minY < minBorderRatio) {
+			minBorderRatio = negBorderY / minY;
+		}
+		if (maxY != 0 & posBorderY / maxY > 0 & posBorderY / maxY < minBorderRatio) {
+			minBorderRatio = posBorderY / maxY;
+		}
+		
 		
 		projections.clear();
 		for (PlotLine line : lines) {
 			PlotLine projectedLine = new PlotLine(line);
-			projectedLine.scaleCoordinates(overallScale);
-			projectedLine.shiftCoordinates(this.axisY, this.axisX);
+			projectedLine.scale(minBorderRatio);
+			projectedLine.translate(this.axisY, this.axisX);
 			projections.add(projectedLine);
 		}
 	}
@@ -104,8 +134,8 @@ public class LinePlot extends GraphicsPlot {
 		
 		g2d.draw(new Line2D.Double(0, this.axisY,
                     this.figWidth, this.axisY));
-		g2d.draw(new Line2D.Double(this.axisX, 0,
-                this.axisY, this.figHeight));
+		g2d.draw(new Line2D.Double(this.figHeight - this.axisX, 0,
+				this.figHeight - this.axisX, this.figHeight));
 	}
 	
 	public void drawPlotLine(Graphics2D g2d, PlotLine line) {
@@ -119,6 +149,21 @@ public class LinePlot extends GraphicsPlot {
             g2d.draw(new Line2D.Double(tracePoints.get(i).getX(), (this.figHeight - tracePoints.get(i).getY()),
                     tracePoints.get(i+1).getX(), (this.figHeight - tracePoints.get(i+1).getY())));
         }
+    	
+    	g2d.draw(getBounds());
+    }
+	
+	public void drawPoint(Graphics2D g2d, Point2D pt, Color color, boolean fill) {
+    	double offset = Constants.POINT_RADIUS;
+    	if (fill) {
+    		g2d.setPaint(color);
+    		g2d.fill(new Ellipse2D.Double(pt.getX() - offset, pt.getY() - offset,
+                    2 * Constants.POINT_RADIUS, 2 * Constants.POINT_RADIUS));
+    	} else {
+    		g2d.setColor(color);
+    		g2d.draw(new Ellipse2D.Double(pt.getX() - offset, pt.getY() - offset,
+                2 * Constants.POINT_RADIUS, 2 * Constants.POINT_RADIUS));
+    	}
     }
 	
 	@Override
@@ -132,7 +177,23 @@ public class LinePlot extends GraphicsPlot {
         for (PlotLine line : projections) {
         	drawPlotLine(g2d, line);
         }
+        
+        if (this.showT) {
+        	for (PlotLine line : projections) {
+        		drawPoint(g2d, 
+        				Utility.invertYCoordinates(line.getTrace().get((int) Math.round(t * line.getTrace().size())), this.figHeight), 
+        				Color.MAGENTA, false);
+            }
+        }
     }
+	
+	public void setShowT(boolean showT) {
+		this.showT = showT;
+	}
+	
+	public void setT(double t) {
+		this.t = t;
+	}
 	
 	public ArrayList<PlotLine> getLines() {
 		return this.lines;
@@ -148,6 +209,18 @@ public class LinePlot extends GraphicsPlot {
 	
 	public int getFigureHeight() {
 		return this.figHeight;
+	}
+	
+	public double getBorderProportion() {
+		return this.borderProportion;
+	}
+	
+	public double getAxisX() {
+		return axisX;
+	}
+
+	public double getAxisY() {
+		return axisY;
 	}
 
 }

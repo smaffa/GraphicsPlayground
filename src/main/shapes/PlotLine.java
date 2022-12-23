@@ -7,76 +7,102 @@ import java.util.Collection;
 
 import main.utils.Constants;
 
-public class PlotLine {
+public class PlotLine implements Transformable2D<PlotLine> {
 	
 	private ArrayList<Point2D> trace = new ArrayList<Point2D>(Constants.BEZIER_FINENESS);
-	private Point2D maxPoint;
-	private Point2D minPoint;
+	private double minX = Double.MAX_VALUE;
+	private double maxX = Double.MIN_VALUE;
+	private double minY = Double.MAX_VALUE;
+	private double maxY = Double.MIN_VALUE;
 	private Color color = Color.BLACK;
 	
-	public PlotLine(Collection<Point2D> trace) {
-		double minX = Double.MAX_VALUE;
-		double minY = Double.MAX_VALUE;
-		double maxX = Double.MIN_VALUE;
-		double maxY = Double.MIN_VALUE;
-		
+	public PlotLine(Collection<Point2D> trace) {		
 		for (Point2D pt : trace) {
-			if (pt.getX() < minX) {
-				minX = pt.getX();
+			if (pt.getX() < this.minX) {
+				this.minX = pt.getX();
 			}
-			if (pt.getX() > maxX) {
-				maxX = pt.getX();
+			if (pt.getX() > this.maxX) {
+				this.maxX = pt.getX();
 			}
-			if (pt.getY() < minY) {
-				minY = pt.getY();
+			if (pt.getY() < this.minY) {
+				this.minY = pt.getY();
 			}
-			if (pt.getY() > maxY) {
-				maxY = pt.getY();
+			if (pt.getY() > this.maxY) {
+				this.maxY = pt.getY();
 			}
 			this.trace.add(pt);
 		}
-		
-		this.maxPoint = new Point2D.Double(maxX, maxY);
-		this.minPoint = new Point2D.Double(minX, minY);
 	}
 	
 	public PlotLine(Collection<Point2D> trace, Color c) {
 		this.color = c;
 		
-		double minX = Double.MAX_VALUE;
-		double minY = Double.MAX_VALUE;
-		double maxX = Double.MIN_VALUE;
-		double maxY = Double.MIN_VALUE;
-		
 		for (Point2D pt : trace) {
-			if (pt.getX() < minX) {
-				minX = pt.getX();
+			if (pt.getX() < this.minX) {
+				this.minX = pt.getX();
 			}
-			if (pt.getX() > maxX) {
-				maxX = pt.getX();
+			if (pt.getX() > this.maxX) {
+				this.maxX = pt.getX();
 			}
-			if (pt.getY() < minY) {
-				minY = pt.getY();
+			if (pt.getY() < this.minY) {
+				this.minY = pt.getY();
 			}
-			if (pt.getY() > maxY) {
-				maxY = pt.getY();
+			if (pt.getY() > this.maxY) {
+				this.maxY = pt.getY();
 			}
 			this.trace.add(pt);
 		}
+	}
+	
+	public PlotLine(Point2D[] trace) {		
+		for (Point2D pt : trace) {
+			if (pt.getX() < this.minX) {
+				this.minX = pt.getX();
+			}
+			if (pt.getX() > this.maxX) {
+				this.maxX = pt.getX();
+			}
+			if (pt.getY() < this.minY) {
+				this.minY = pt.getY();
+			}
+			if (pt.getY() > this.maxY) {
+				this.maxY = pt.getY();
+			}
+			this.trace.add(pt);
+		}
+	}
+	
+	public PlotLine(Point2D[] trace, Color c) {
+		this.color = c;
 		
-		this.maxPoint = new Point2D.Double(maxX, maxY);
-		this.minPoint = new Point2D.Double(minX, minY);
+		for (Point2D pt : trace) {
+			if (pt.getX() < this.minX) {
+				this.minX = pt.getX();
+			}
+			if (pt.getX() > this.maxX) {
+				this.maxX = pt.getX();
+			}
+			if (pt.getY() < this.minY) {
+				this.minY = pt.getY();
+			}
+			if (pt.getY() > this.maxY) {
+				this.maxY = pt.getY();
+			}
+			this.trace.add(pt);
+		}
 	}
 	
 	public PlotLine(PlotLine line) {
 		for (Point2D pt : line.getTrace()) {
 			this.trace.add(new Point2D.Double(pt.getX(), pt.getY()));
 		}
-		this.maxPoint = new Point2D.Double(line.getMaxPoint().getX(), line.getMaxPoint().getY());
-		this.minPoint = new Point2D.Double(line.getMinPoint().getX(), line.getMinPoint().getY());
+		this.maxX = line.getMaxX();
+		this.maxY = line.getMaxY();
+		this.minX = line.getMinX();
+		this.minY = line.getMinY();
 		this.color = line.getColor();
 	}
-	
+
 	public ArrayList<Point2D> getTrace() {
 		return this.trace;
 	}
@@ -85,31 +111,158 @@ public class PlotLine {
 		return this.color;
 	}
 	
-	public void shiftCoordinates(double deltaX, double deltaY) {
-		for (Point2D pt : trace) {
-			pt.setLocation(pt.getX() + deltaX, pt.getY() + deltaY);
+	public void setColor(Color color) {
+		this.color = color;
+	}
+	
+	public double getMaxX() {
+		return this.maxX;
+	}
+	
+	public double getMaxY() {
+		return this.maxY;
+	}
+	
+	public double getMinX() {
+		return this.minX;
+	}
+	
+	public double getMinY() {
+		return this.minY;
+	}
+	
+	public void recomputeMaxima() {
+		this.minX = Double.MAX_VALUE;
+		this.minY = Double.MAX_VALUE;
+		this.maxX = Double.MIN_VALUE;
+		this.maxY = Double.MIN_VALUE;
+		
+		for (Point2D pt : this.trace) {
+			if (pt.getX() < this.minX) {
+				this.minX = pt.getX();
+			}
+			if (pt.getX() > this.maxX) {
+				this.maxX = pt.getX();
+			}
+			if (pt.getY() < this.minY) {
+				this.minY = pt.getY();
+			}
+			if (pt.getY() > this.maxY) {
+				this.maxY = pt.getY();
+			}
 		}
-		this.maxPoint = new Point2D.Double(maxPoint.getX() + deltaX, maxPoint.getY() + deltaY);
-		this.minPoint = new Point2D.Double(minPoint.getX() + deltaX, minPoint.getY() + deltaY);
-	}
-	
-	public void scaleCoordinates(double factor) {
-		for (Point2D pt : trace) {
-			pt.setLocation(pt.getX() * factor, pt.getY() * factor);
-		}
-		this.maxPoint = new Point2D.Double(maxPoint.getX() * factor, maxPoint.getY() * factor);
-		this.minPoint = new Point2D.Double(minPoint.getX() * factor, minPoint.getY() * factor);
-	}
-	
-	public Point2D getMaxPoint() {
-		return this.maxPoint;
-	}
-	
-	public Point2D getMinPoint() {
-		return this.minPoint;
 	}
 	
 	public String toString() {
 		return this.trace.toString();
+	}
+
+	@Override
+	public PlotLine translate(double xDelta, double yDelta) {
+		// TODO Auto-generated method stub
+		for (Point2D pt : trace) {
+			pt.setLocation(new Point2D.Double(pt.getX() + xDelta, pt.getY() + yDelta));
+		}
+		this.maxX = this.maxX + xDelta;
+		this.maxY = this.maxY + yDelta;
+		this.minX = this.minX + xDelta;
+		this.minY = this.minY + yDelta;
+		return this;
+	}
+
+	@Override
+	public PlotLine reflect(double axisVectorX, double axisVectorY) {
+		// TODO Auto-generated method stub
+		double vectorNorm = Math.sqrt(Math.pow(axisVectorX, 2) + Math.pow(axisVectorY, 2));
+		double xComponent = axisVectorX / vectorNorm;
+		double yComponent = axisVectorY / vectorNorm;
+		double xComponentSquared = Math.pow(xComponent, 2);
+		double yComponentSquared = Math.pow(yComponent, 2);
+		double transformCoeff00 = xComponentSquared - yComponentSquared;
+		double transformCoeff01 = 2 * xComponent * yComponent;
+		double transformCoeff11 = yComponentSquared - xComponentSquared;
+		
+		for (Point2D pt : trace) {
+			pt.setLocation(new Point2D.Double(transformCoeff00 * pt.getX() + transformCoeff01 * pt.getY(),
+					transformCoeff01 * pt.getX() + transformCoeff11 * pt.getY()));
+		}
+		
+		recomputeMaxima();
+		return this;
+	}
+
+	@Override
+	public PlotLine scale(double xScale, double yScale) {
+		// TODO Auto-generated method stub
+		for (Point2D pt : trace) {
+			pt.setLocation(new Point2D.Double(xScale * pt.getX(), yScale * pt.getY()));
+		}
+		if (xScale < 0) {
+			this.maxX = xScale * this.minX;
+			this.minX = xScale * this.maxX;
+		} else {
+			this.maxX = xScale * this.maxX;
+			this.minX = xScale * this.minX;
+		}
+		if (yScale < 0) {
+			this.maxY = yScale * this.minY;
+			this.minY = yScale * this.maxY;
+		} else {
+			this.maxY = yScale * this.maxY;
+			this.minY = yScale * this.minY;
+		}
+		return this;
+	}
+
+	@Override
+	public PlotLine scale(double factor) {
+		// TODO Auto-generated method stub
+		return scale(factor, factor);
+	}
+
+	@Override
+	public PlotLine rotate(double radians) {
+		// TODO Auto-generated method stub
+		double cosCoeff;
+		double sinCoeff;
+		if (radians == Math.PI / 2) {
+			cosCoeff = 0;
+			sinCoeff = 1;
+		} else if (radians == Math.PI) {
+			cosCoeff = -1;
+			sinCoeff = 0;
+		} else if (radians == 3 * Math.PI / 2) {
+			cosCoeff = 0;
+			sinCoeff = -1;
+		} else {
+			cosCoeff = Math.cos(radians);
+			sinCoeff = Math.sin(radians);
+		}
+		for (Point2D pt : trace) {
+			pt.setLocation(cosCoeff * pt.getX() - sinCoeff * pt.getY(),
+					sinCoeff * pt.getX() + cosCoeff * pt.getY());
+		}
+		recomputeMaxima();
+		return this;
+	}
+
+	@Override
+	public PlotLine shearX(double factor) {
+		// TODO Auto-generated method stub
+		for (Point2D pt : trace) {
+			pt.setLocation(pt.getX() + factor * pt.getY(), pt.getY());
+		}
+		recomputeMaxima();
+		return this;
+	}
+
+	@Override
+	public PlotLine shearY(double factor) {
+		// TODO Auto-generated method stub
+		for (Point2D pt : trace) {
+			pt.setLocation(pt.getX(), factor * pt.getX() + pt.getY());
+		}
+		recomputeMaxima();
+		return this;
 	}
 }
