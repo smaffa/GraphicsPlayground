@@ -3,6 +3,8 @@ package main.sketch.plots;
 import java.util.ArrayList;
 import java.util.Collection;
 
+import main.shapes.AnnotationShape;
+import main.shapes.PlotArrow;
 import main.shapes.PlotLine;
 import main.utils.Constants;
 import main.utils.Utility;
@@ -21,6 +23,8 @@ public class LinePlot extends GraphicsPlot {
 
 	private ArrayList<PlotLine> lines = new ArrayList<PlotLine>();
 	private ArrayList<PlotLine> projections = new ArrayList<PlotLine>();
+	private ArrayList<AnnotationShape> annotations = new ArrayList<AnnotationShape>();
+	private ArrayList<PlotLine> annotationProjections = new ArrayList<PlotLine>();
 	
 	private int figWidth = 500;
 	private int figHeight = 500;
@@ -31,6 +35,8 @@ public class LinePlot extends GraphicsPlot {
 	
 	private boolean showT = false;
 	private double t;
+	
+	private boolean showAnnotations = false;
 	
 	public LinePlot() {}
 	
@@ -71,6 +77,15 @@ public class LinePlot extends GraphicsPlot {
 	
 	public void setLine(int idx, PlotLine line) {
 		lines.set(idx, line);
+	}
+	
+	public int addAnnotation(AnnotationShape annShape) {
+		this.annotations.add(annShape);
+		return this.annotations.size();
+	}
+	
+	public void setAnnotation(int idx, AnnotationShape annShape) {
+		annotations.set(idx, annShape);
 	}
 	
 	@Override
@@ -125,6 +140,21 @@ public class LinePlot extends GraphicsPlot {
 			projectedLine.scale(minBorderRatio);
 			projectedLine.translate(this.axisY, this.axisX);
 			projections.add(projectedLine);
+		}
+		
+		annotationProjections.clear();
+		for (AnnotationShape ann : annotations) {
+			if (ann instanceof PlotArrow) {
+				PlotArrow projectedArrow = new PlotArrow((PlotArrow) ann);
+				projectedArrow.scale(minBorderRatio);
+				projectedArrow.translate(this.axisY, this.axisX);
+				annotationProjections.add(new PlotLine(projectedArrow.getTrace(), Color.RED));
+			} else {
+				PlotLine projectedAnnotation = new PlotLine(ann.getTrace(), Color.RED);
+				projectedAnnotation.scale(minBorderRatio);
+				projectedAnnotation.translate(this.axisY,  this.axisX);
+				annotationProjections.add(projectedAnnotation);
+			}
 		}
 	}
 	
@@ -181,18 +211,30 @@ public class LinePlot extends GraphicsPlot {
         if (this.showT) {
         	for (PlotLine line : projections) {
         		drawPoint(g2d, 
-        				Utility.invertYCoordinates(line.getTrace().get((int) Math.round(t * line.getTrace().size())), this.figHeight), 
+        				Utility.invertYCoordinates(line.getTrace().get(Utility.imputeTIndex(t, line.getTrace().size())), this.figHeight), 
         				Color.MAGENTA, false);
             }
         }
+        if (this.showAnnotations) {
+        	for (PlotLine ann : annotationProjections) {
+        		drawPlotLine(g2d, new PlotLine(ann.getTrace(), ann.getColor()));
+            }
+        }
+        g2d.setColor(Color.BLACK);
     }
 	
 	public void setShowT(boolean showT) {
 		this.showT = showT;
+		this.repaint();
 	}
 	
 	public void setT(double t) {
 		this.t = t;
+	}
+	
+	public void setShowAnnotations(boolean showAnnotations) {
+		this.showAnnotations = showAnnotations;
+		this.repaint();
 	}
 	
 	public ArrayList<PlotLine> getLines() {

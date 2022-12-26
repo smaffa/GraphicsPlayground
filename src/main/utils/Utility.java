@@ -1,6 +1,7 @@
 package main.utils;
 
 import java.awt.geom.Point2D;
+import java.util.ArrayList;
 
 import main.shapes.CubicBezierCurve;
 
@@ -34,5 +35,25 @@ public class Utility {
 	
 	public static Point2D invertYCoordinates(Point2D pt, int figHeight) {
 		return new Point2D.Double(pt.getX(), figHeight - pt.getY());
+	}
+	
+	public static Point2D[] invertYCoordinates(Point2D[] trace, int figHeight) {
+		Point2D[] invertedTrace = new Point2D[trace.length];
+		for (int i = 0; i < trace.length; i++) {
+			invertedTrace[i] = invertYCoordinates(trace[i], figHeight);
+		}
+		return invertedTrace;
+	}
+	
+	public static ArrayList<Point2D> invertYCoordinates(ArrayList<Point2D> trace, int figHeight) {
+		ArrayList<Point2D> invertedTrace = new ArrayList<Point2D>();
+		for (int i = 0; i < trace.size(); i++) {
+			invertedTrace.add(invertYCoordinates(trace.get(i), figHeight));
+		}
+		return invertedTrace;
+	}
+	
+	public static int imputeTIndex(double t, int length) {
+		return (int) Math.round(t * (length - 1));
 	}
 }
