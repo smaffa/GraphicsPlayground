@@ -3,8 +3,10 @@ package main.sketch.plots;
 import java.util.ArrayList;
 import java.util.Collection;
 
+import javax.swing.BorderFactory;
+
 import main.shapes.AnnotationShape;
-import main.shapes.PlotArrow;
+import main.shapes.Arrow;
 import main.shapes.PlotLine;
 import main.utils.Constants;
 import main.utils.Utility;
@@ -144,8 +146,8 @@ public class LinePlot extends GraphicsPlot {
 		
 		annotationProjections.clear();
 		for (AnnotationShape ann : annotations) {
-			if (ann instanceof PlotArrow) {
-				PlotArrow projectedArrow = new PlotArrow((PlotArrow) ann);
+			if (ann instanceof Arrow) {
+				Arrow projectedArrow = new Arrow((Arrow) ann);
 				projectedArrow.scale(minBorderRatio);
 				projectedArrow.translate(this.axisY, this.axisX);
 				annotationProjections.add(new PlotLine(projectedArrow.getTrace(), Color.RED));

@@ -3,6 +3,7 @@ package main;
 import javax.swing.*;
 
 import main.programs.BezierCreator;
+import main.programs.CurveRider;
 import main.programs.DerivativeExplorer;
 
 public class Run {
@@ -16,8 +17,13 @@ public class Run {
 		SwingUtilities.invokeLater(new DerivativeExplorer());
 	}
 	
+	public static void runCurveRider() {
+		SwingUtilities.invokeLater(new CurveRider());
+	}
+	
     public static void main(String[] args) {
-//        runBezierCreator();
-    	runDerivativeExplorer();
+//    	runBezierCreator();
+//    	runDerivativeExplorer();
+    	runCurveRider();
     }
 }

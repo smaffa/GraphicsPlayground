@@ -31,6 +31,11 @@ public class QuadraticBezierCurve extends BezierCurve {
         }
         return this.traceArray;
     }
+    
+    public Point2D computePositionAtT(double t) {
+    	// TODO: fill
+    	return new Point2D.Double(0, 0);
+    }
 
     public Point2D[] getTraceArray() {
         return this.traceArray;

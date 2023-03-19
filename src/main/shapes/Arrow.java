@@ -3,7 +3,7 @@ package main.shapes;
 import java.awt.Color;
 import java.awt.geom.Point2D;
 
-public class PlotArrow extends AnnotationShape implements Transformable2D<PlotArrow> {
+public class Arrow extends AnnotationShape implements Transformable2D<Arrow> {
 
 	private double xStart;
 	private double yStart;
@@ -12,14 +12,14 @@ public class PlotArrow extends AnnotationShape implements Transformable2D<PlotAr
 	
 	private Color color = Color.BLACK;
 	
-	public PlotArrow(double xStart, double yStart, double xVector, double yVector) {
+	public Arrow(double xStart, double yStart, double xVector, double yVector) {
 		this.xStart = xStart;
 		this.yStart = yStart;
 		this.xVector = xVector;
 		this.yVector = yVector;
 	}
 	
-	public PlotArrow(double xStart, double yStart, double xVector, double yVector, Color c) {
+	public Arrow(double xStart, double yStart, double xVector, double yVector, Color c) {
 		this.xStart = xStart;
 		this.yStart = yStart;
 		this.xVector = xVector;
@@ -27,7 +27,7 @@ public class PlotArrow extends AnnotationShape implements Transformable2D<PlotAr
 		this.color = c;
 	}
 	
-	public PlotArrow(PlotArrow other) {
+	public Arrow(Arrow other) {
 		this.xStart = other.getxStart();
 		this.yStart = other.getyStart();
 		this.xVector = other.getxVector();
@@ -92,18 +92,19 @@ public class PlotArrow extends AnnotationShape implements Transformable2D<PlotAr
 				sinCoeff * headLengthX + cosCoeff * headLengthY);
 		trace[2] = new Point2D.Double(trace[1].getX() - headRotation1.getX(), trace[1].getY() - headRotation1.getY());
 		
+		trace[3] = trace[1];
+		
 		cosCoeff = Math.cos(11 * Math.PI / 6);
 		sinCoeff = Math.sin(11 * Math.PI / 6);
 		Point2D headRotation2 = new Point2D.Double(cosCoeff * headLengthX - sinCoeff * headLengthY,
 				sinCoeff * headLengthX + cosCoeff * headLengthY);
-		trace[3] = new Point2D.Double(trace[1].getX() - headRotation2.getX(), trace[1].getY() - headRotation2.getY());
+		trace[4] = new Point2D.Double(trace[1].getX() - headRotation2.getX(), trace[1].getY() - headRotation2.getY());
 	
-		trace[4] = trace[1];
 		return trace;
 	}
 
 	@Override
-	public PlotArrow translate(double xDelta, double yDelta) {
+	public Arrow translate(double xDelta, double yDelta) {
 		// TODO Auto-generated method stub
 		this.xStart = this.xStart + xDelta;
 		this.yStart = this.yStart + yDelta;
@@ -111,7 +112,7 @@ public class PlotArrow extends AnnotationShape implements Transformable2D<PlotAr
 	}
 
 	@Override
-	public PlotArrow reflect(double axisVectorX, double axisVectorY) {
+	public Arrow reflect(double axisVectorX, double axisVectorY) {
 		// TODO Auto-generated method stub
 		double vectorNorm = Math.sqrt(Math.pow(axisVectorX, 2) + Math.pow(axisVectorY, 2));
 		double xComponent = axisVectorX / vectorNorm;
@@ -132,7 +133,7 @@ public class PlotArrow extends AnnotationShape implements Transformable2D<PlotAr
 	}
 
 	@Override
-	public PlotArrow scale(double xScale, double yScale) {
+	public Arrow scale(double xScale, double yScale) {
 		// TODO Auto-generated method stub
 		this.xStart = this.xStart * xScale;
 		this.yStart = this.yStart * yScale;
@@ -142,13 +143,13 @@ public class PlotArrow extends AnnotationShape implements Transformable2D<PlotAr
 	}
 
 	@Override
-	public PlotArrow scale(double factor) {
+	public Arrow scale(double factor) {
 		// TODO Auto-generated method stub
 		return scale(factor, factor);
 	}
 
 	@Override
-	public PlotArrow rotate(double radians) {
+	public Arrow rotate(double radians) {
 		// TODO Auto-generated method stub
 		double cosCoeff = Math.cos(radians);
 		double sinCoeff = Math.sin(radians);
@@ -160,7 +161,7 @@ public class PlotArrow extends AnnotationShape implements Transformable2D<PlotAr
 	}
 
 	@Override
-	public PlotArrow shearX(double factor) {
+	public Arrow shearX(double factor) {
 		// TODO Auto-generated method stub
 		this.xStart = this.xStart + factor * this.yStart;
 		this.xVector = this.xVector + factor * this.yVector;
@@ -168,7 +169,7 @@ public class PlotArrow extends AnnotationShape implements Transformable2D<PlotAr
 	}
 
 	@Override
-	public PlotArrow shearY(double factor) {
+	public Arrow shearY(double factor) {
 		// TODO Auto-generated method stub
 		this.yStart = this.yStart + factor * this.xStart;
 		this.yVector = this.yVector + factor * this.xVector;

@@ -23,4 +23,6 @@ public class Constants {
     });
     
     public static final double ERROR_TOLERANCE = 1e-9;
+    
+    public static final int FRAME_DELAY_MS = 25;
 }

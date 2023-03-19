@@ -11,6 +11,8 @@ public abstract class BezierCurve implements Transformable2D<BezierCurve> {
     public void drawPoint(double t) {}
 
     public abstract Point2D[] computePosition();
+    
+    public abstract Point2D computePositionAtT(double t);
 
     public abstract Point2D[] getControlPoints();
     

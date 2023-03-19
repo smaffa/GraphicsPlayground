@@ -142,12 +142,17 @@ public class CubicBezierCurve extends BezierCurve {
         return tCoefficientMatrix;
     }
     
+    private SimpleMatrix getControlCoordinateMatrix() {
+    	return new SimpleMatrix(new double[][] {
+    		{p1.getX(), p1.getY()}, 
+			{c1.getX(), c1.getY()}, 
+			{c2.getX(), c2.getY()},
+			{p2.getX(), p2.getY()}
+		});
+    }
+    
     public Point2D[] computePosition(int bezierFineness) {
-    	SimpleMatrix controlCoordinateMatrix = new SimpleMatrix(
-    			new double[][] {{p1.getX(), p1.getY()}, 
-    				{c1.getX(), c1.getY()}, 
-    				{c2.getX(), c2.getY()},
-    				{p2.getX(), p2.getY()}});
+    	SimpleMatrix controlCoordinateMatrix = getControlCoordinateMatrix();
         SimpleMatrix positionMatrix = computeTMatrixPosition(bezierFineness).mult(Constants.CUBIC_POINT_COEFFICIENT_MATRIX).mult(controlCoordinateMatrix);
         
         Point2D[] positionArray = new Point2D[bezierFineness + 1];
@@ -157,17 +162,22 @@ public class CubicBezierCurve extends BezierCurve {
         return positionArray;
     }
     
+    public Point2D computePositionAtT(double t) {
+    	SimpleMatrix controlCoordinateMatrix = getControlCoordinateMatrix();
+    	SimpleMatrix tPoint = new SimpleMatrix(new double[][] {
+    		{1, t, Math.pow(t, 2), Math.pow(t, 3)}
+    	});
+        SimpleMatrix positionMatrix = tPoint.mult(Constants.CUBIC_POINT_COEFFICIENT_MATRIX).mult(controlCoordinateMatrix);
+        
+        return new Point2D.Double(positionMatrix.get(0, 0), positionMatrix.get(0, 1));
+    }
+    
     public Point2D[] computePosition() {
     	return computePosition(this.getBezierFineness());
     }
     
     public Point2D[] computeVelocity(int bezierFineness) {
-    	SimpleMatrix controlCoordinateMatrix = new SimpleMatrix(
-    			new double[][] {{p1.getX(), p1.getY()}, 
-    				{c1.getX(), c1.getY()}, 
-    				{c2.getX(), c2.getY()},
-    				{p2.getX(), p2.getY()}});
-    	
+    	SimpleMatrix controlCoordinateMatrix = getControlCoordinateMatrix();
         SimpleMatrix velocityMatrix = computeTMatrixVelocity(bezierFineness).mult(Constants.CUBIC_POINT_COEFFICIENT_MATRIX).mult(controlCoordinateMatrix);
         
         Point2D[] velocityArray = new Point2D[bezierFineness + 1];
@@ -183,12 +193,7 @@ public class CubicBezierCurve extends BezierCurve {
     }
     
     public Point2D[] computeAcceleration(int bezierFineness) {
-    	SimpleMatrix controlCoordinateMatrix = new SimpleMatrix(
-    			new double[][] {{p1.getX(), p1.getY()}, 
-    				{c1.getX(), c1.getY()}, 
-    				{c2.getX(), c2.getY()},
-    				{p2.getX(), p2.getY()}});
-    	
+    	SimpleMatrix controlCoordinateMatrix = getControlCoordinateMatrix();
         SimpleMatrix accelerationMatrix = computeTMatrixAcceleration(bezierFineness).mult(Constants.CUBIC_POINT_COEFFICIENT_MATRIX).mult(controlCoordinateMatrix);
         
         Point2D[] accelerationArray = new Point2D[bezierFineness + 1];

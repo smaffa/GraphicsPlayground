@@ -1,7 +1,9 @@
 package main.sketch;
 
+import main.shapes.AnnotationShape;
 import main.shapes.BezierCurve;
 import main.shapes.CubicBezierCurve;
+import main.shapes.PlotLine;
 import main.shapes.QuadraticBezierCurve;
 import main.utils.Constants;
 
@@ -25,6 +27,9 @@ public class SketchPad extends JPanel {
     private ArrayList<BezierCurve> bezierCurves = new ArrayList<BezierCurve>();
     private ArrayList<ArrayList<Integer>> bezierControlIndices = new ArrayList<ArrayList<Integer>>();
     
+    // annotation data
+    private ArrayList<AnnotationShape> annotationShapes = new ArrayList<AnnotationShape>();
+    
     // curve creation
     private boolean isBezierCreationModeOn = false;
     private ArrayList<Integer> currentBezierCreationList = new ArrayList<Integer>(4);
@@ -36,6 +41,7 @@ public class SketchPad extends JPanel {
     private boolean showT = false;
     private boolean showReferenceLines = false;
 
+    //visual settings
     private Color pointDefaultColor = Color.BLACK;
     private Color pointSelectedColor = Color.RED;
     private Color tPointColor = Color.MAGENTA;
@@ -50,6 +56,7 @@ public class SketchPad extends JPanel {
     final static BasicStroke traceStroke = 
     		new BasicStroke(2.0f); 
     
+    // GUI settings
     private int canvasWidth = Constants.CANVAS_WIDTH;
     private int canvasHeight = Constants.CANVAS_HEIGHT;
 
@@ -280,6 +287,18 @@ public class SketchPad extends JPanel {
                 2 * Constants.POINT_RADIUS, 2 * Constants.POINT_RADIUS));
     	}
     }
+    
+    public void drawAnnotationShape(Graphics2D g2d, AnnotationShape ann) {
+    	g2d.setColor(ann.getColor());
+    	g2d.setStroke(ann.getTraceStroke());
+    	
+    	Point2D[] tracePoints = ann.getTrace();
+    	
+    	for (int i = 0; i < tracePoints.length - 1; i++) {
+            g2d.draw(new Line2D.Double(tracePoints[i].getX(), tracePoints[i].getY(),
+                    tracePoints[i+1].getX(), tracePoints[i+1].getY()));
+        }
+    }
 
     @Override
     public void paintComponent(Graphics g) {
@@ -321,6 +340,13 @@ public class SketchPad extends JPanel {
         // draw curves
         for (BezierCurve c : bezierCurves) {
         	drawBezierCurve(g2d, c);
+        }
+        
+        // draw annotations
+        for (AnnotationShape ann : annotationShapes) {
+        	if (ann.getShowShape()) {
+        		drawAnnotationShape(g2d, ann);
+        	}
         }
     }
 
@@ -366,6 +392,10 @@ public class SketchPad extends JPanel {
 	
 	public ArrayList<BezierCurve> getBezierCurves() {
 		return this.bezierCurves;
+	}
+	
+	public ArrayList<AnnotationShape> getAnnotationShapes() {
+		return this.annotationShapes;
 	}
 	
     public int getCanvasWidth() {

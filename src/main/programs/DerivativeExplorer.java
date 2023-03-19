@@ -26,7 +26,7 @@ import javax.swing.event.ChangeListener;
 
 import main.shapes.BezierCurve;
 import main.shapes.CubicBezierCurve;
-import main.shapes.PlotArrow;
+import main.shapes.Arrow;
 import main.shapes.PlotLine;
 import main.sketch.SketchPad;
 import main.sketch.plots.GraphicsPlot;
@@ -51,7 +51,7 @@ public class DerivativeExplorer implements Runnable {
 		sketchPad.addRandomPoint();
 		sketchPad.addRandomPoint();
 		sketchPad.createBezierCurve(new ArrayList<Integer>(Arrays.asList(0, 1, 2, 3)));
-		sketchPad.setShowT(true);
+		sketchPad.setShowT(false);
 		sketchPad.setT(globalT);
 		
 		curve = Utility.invertYCoordinates((CubicBezierCurve) sketchPad.getBezierCurves().get(0), sketchPad.getCanvasHeight());
@@ -63,11 +63,11 @@ public class DerivativeExplorer implements Runnable {
 		int idxVelocity = (int) Math.round(this.globalT * velocity.length);
 		
 		positionPlot.addLine(new PlotLine(Arrays.asList(curveCopy.computePosition()), Color.BLUE));
-		positionPlot.addAnnotation(new PlotArrow(position[idxPosition].getX(), position[idxPosition].getY(),
+		positionPlot.addAnnotation(new Arrow(position[idxPosition].getX(), position[idxPosition].getY(),
 				velocity[idxVelocity].getX(), velocity[idxVelocity].getY()));
 		
 		velocityPlot.addLine(new PlotLine(Arrays.asList(curveCopy.computeVelocity()), Color.BLUE));
-		velocityPlot.addAnnotation(new PlotArrow(0, 0,
+		velocityPlot.addAnnotation(new Arrow(0, 0,
 				velocity[idxVelocity].getX(), velocity[idxVelocity].getY()));
 		
 		positionPlot.setShowT(false);
@@ -94,12 +94,12 @@ public class DerivativeExplorer implements Runnable {
             		int idxVelocity = Utility.imputeTIndex(globalT, velocity.length);
                     
                     positionPlot.setLine(0, new PlotLine(Arrays.asList(curveCopy.computePosition()), Color.BLUE));
-                    positionPlot.setAnnotation(0, new PlotArrow(position[idxPosition].getX(), position[idxPosition].getY(),
+                    positionPlot.setAnnotation(0, new Arrow(position[idxPosition].getX(), position[idxPosition].getY(),
 				vectorScale * velocity[idxVelocity].getX(), vectorScale * velocity[idxVelocity].getY()));
                     positionPlot.repaint();
                     
                     velocityPlot.setLine(0, new PlotLine(Arrays.asList(curveCopy.computeVelocity()), Color.BLUE));
-                    velocityPlot.setAnnotation(0, new PlotArrow(0, 0,
+                    velocityPlot.setAnnotation(0, new Arrow(0, 0,
 				velocity[idxVelocity].getX(), velocity[idxVelocity].getY()));
                     velocityPlot.repaint();
                 }
@@ -127,10 +127,10 @@ public class DerivativeExplorer implements Runnable {
         		Point2D[] velocity = curveCopy.computeVelocity();
         		int idxVelocity = Utility.imputeTIndex(globalT, velocity.length);
                 
-                positionPlot.setAnnotation(0, new PlotArrow(position[idxPosition].getX(), position[idxPosition].getY(),
+                positionPlot.setAnnotation(0, new Arrow(position[idxPosition].getX(), position[idxPosition].getY(),
 			vectorScale * velocity[idxVelocity].getX(), vectorScale * velocity[idxVelocity].getY()));
                 
-                velocityPlot.setAnnotation(0, new PlotArrow(0, 0,
+                velocityPlot.setAnnotation(0, new Arrow(0, 0,
 			velocity[idxVelocity].getX(), velocity[idxVelocity].getY()));
         		
         		sketchPad.repaint();
@@ -174,10 +174,10 @@ public class DerivativeExplorer implements Runnable {
         		Point2D[] velocity = curveCopy.computeVelocity();
         		int idxVelocity = Utility.imputeTIndex(globalT, velocity.length);
                 
-                positionPlot.setAnnotation(0, new PlotArrow(position[idxPosition].getX(), position[idxPosition].getY(),
+                positionPlot.setAnnotation(0, new Arrow(position[idxPosition].getX(), position[idxPosition].getY(),
 			vectorScale * velocity[idxVelocity].getX(), vectorScale * velocity[idxVelocity].getY()));
                 
-                velocityPlot.setAnnotation(0, new PlotArrow(0, 0,
+                velocityPlot.setAnnotation(0, new Arrow(0, 0,
 			velocity[idxVelocity].getX(), velocity[idxVelocity].getY()));
         		
         		sketchPad.repaint();
