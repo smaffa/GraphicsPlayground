@@ -32,11 +32,8 @@ import javax.swing.JSlider;
 import javax.swing.JToggleButton;
 
 import main.shapes.BezierCurve;
-import main.shapes.Circle;
-import main.shapes.CubicBezierCurve;
+import main.shapes.RegularPolygon;
 import main.shapes.AnnotationShape;
-import main.shapes.Arrow;
-import main.shapes.PlotLine;
 import main.sketch.SketchPad;
 import main.utils.Constants;
 import main.utils.Utility;
@@ -285,15 +282,16 @@ public class CurveRider implements Runnable {
 		return Utility.lerp(tLow, tHigh, sPartial);
 	}
 	
-	public static Circle makeRiderPoint(double x, double y, Color c, Stroke stroke) {
-		Circle circle = new Circle(x, y);
-		circle.setColor(c);
-		circle.setTraceStroke(stroke);
-		return circle;
+	public static RegularPolygon makeRider(double x, double y, int nSides, double radius, double orientation, 
+			Color c, Stroke stroke) {
+		RegularPolygon polygon = new RegularPolygon(x, y, nSides, radius, orientation);
+		polygon.setColor(c);
+		polygon.setTraceStroke(stroke);
+		return polygon;
 	}
 	
-	public static Circle makeDefaultRiderPoint(double x, double y) {
-		return makeRiderPoint(x, y, Color.BLUE, new BasicStroke(3.0f));
+	public static RegularPolygon makeDefaultRider(double x, double y) {
+		return makeRider(x, y, 24, 5, 0, Color.BLUE, new BasicStroke(3.0f));
 	}
 		
 	public void realignPoints() {
@@ -303,8 +301,8 @@ public class CurveRider implements Runnable {
 			annotationShapes.remove(annotationShapes.size() - 1);
 		}
 		while (annotationShapes.size() < 2 * nPoints) {
-			annotationShapes.add(makeRiderPoint(0, 0, Color.BLUE, new BasicStroke(3.0f)));
-			annotationShapes.add(makeRiderPoint(0, 0, new Color(255, 125, 50), new BasicStroke(3.0f)));
+			annotationShapes.add(makeRider(0, 0, 3, 5, -Math.PI / 2, Color.BLUE, new BasicStroke(3.0f)));
+			annotationShapes.add(makeRider(0, 0, 4, 5, Math.PI / 4, new Color(255, 125, 50), new BasicStroke(3.0f)));
 		}
 		
 		annotationShapes.get(0).setColor(new Color(150, 0, 255));
@@ -319,8 +317,8 @@ public class CurveRider implements Runnable {
 				rolledT -= 1;
 			}
 			Point2D ptT = curve.computePositionAtT(rolledT);
-			((Circle) annotationShapes.get(2 * i)).setX(ptT.getX());
-			((Circle) annotationShapes.get(2 * i)).setY(ptT.getY());
+			((RegularPolygon) annotationShapes.get(2 * i)).setX(ptT.getX());
+			((RegularPolygon) annotationShapes.get(2 * i)).setY(ptT.getY());
 			annotationShapes.get(2 * i).setShowShape(showTimeParameterized);
 			
 			double rolledS = baseS + (i * offset);
@@ -330,8 +328,8 @@ public class CurveRider implements Runnable {
 			
 			double arcLengthT = arcLengthApproximateT(rolledS);
 			Point2D ptS = curve.computePositionAtT(arcLengthT);
-			((Circle) annotationShapes.get((2 * i) + 1)).setX(ptS.getX());
-			((Circle) annotationShapes.get((2 * i) + 1)).setY(ptS.getY());
+			((RegularPolygon) annotationShapes.get((2 * i) + 1)).setX(ptS.getX());
+			((RegularPolygon) annotationShapes.get((2 * i) + 1)).setY(ptS.getY());
 			annotationShapes.get((2 * i) + 1).setShowShape(showArcLengthParameterized);
 		}
 	}

@@ -6,8 +6,13 @@ import main.programs.BezierCreator;
 import main.programs.CurveRider;
 import main.programs.DerivativeExplorer;
 
+/**
+ * Class for launching individual programs.
+ * @author smaffa
+ *
+ */
 public class Run {
-	private static boolean isDev = false;
+	private static boolean isDev = false; // flag for running development versions of each program
 	
 	public static void runBezierCreator() {
 		SwingUtilities.invokeLater(new BezierCreator(isDev));

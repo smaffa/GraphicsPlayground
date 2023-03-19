@@ -8,12 +8,24 @@ import java.util.Objects;
 
 import org.ejml.simple.SimpleMatrix;
 
+/**
+ * A class representing cubic Bezier curves. Cubic Bezier curves are defined by 4 points.
+ * @author smaffa
+ *
+ */
 public class CubicBezierCurve extends BezierCurve {
 	private Point2D p1;
     private Point2D c1;
     private Point2D c2;
     private Point2D p2;
     
+    /**
+     * Basic constructor for a CubicBezierCurve based on all four control points.
+     * @param p1	a {@link Point2D} object representing the first endpoint of the curve
+     * @param c1	a {@link Point2D} object representing the first control point of the curve
+     * @param c2	a {@link Point2D} object representing the second control point of the curve
+     * @param p2	a {@link Point2D} object representing the second endpoint of the curve
+     */
     public CubicBezierCurve(Point2D p1, Point2D c1, Point2D c2, Point2D p2) {    	
         this.p1 = p1;
         this.c1 = c1;
@@ -21,18 +33,25 @@ public class CubicBezierCurve extends BezierCurve {
         this.p2 = p2;
     }
     
-    public CubicBezierCurve(Point2D p1, Point2D c1, Point2D c2, Point2D p2, int bezierFineness) {
-    	this.setBezierFineness(bezierFineness);
-    	
+    /**
+     * Constructor for a CubicBezierCurve based on all four control points and the fineness of the curve.
+     * @param p1	a {@link Point2D} object representing the first endpoint of the curve
+     * @param c1	a {@link Point2D} object representing the first control point of the curve
+     * @param c2	a {@link Point2D} object representing the second control point of the curve
+     * @param p2	a {@link Point2D} object representing the second endpoint of the curve
+     * @param bezierFineness	an integer specifying the number of points to interpolate along the curve
+     */
+    public CubicBezierCurve(Point2D p1, Point2D c1, Point2D c2, Point2D p2, int bezierFineness) {    	
         this.p1 = p1;
         this.c1 = c1;
         this.c2 = c2;
         this.p2 = p2;
+    	super.setBezierFineness(bezierFineness);
     }
     
     /**
      * Copy constructor
-     * @param other
+     * @param other		another CubicBezierCurve
      */
     public CubicBezierCurve(CubicBezierCurve other) {
     	this.p1 = new Point2D.Double(other.getP1().getX(), other.getP1().getY());
@@ -73,6 +92,11 @@ public class CubicBezierCurve extends BezierCurve {
 	public void setP2(Point2D p2) {
 		this.p2 = p2;
 	}
+	
+	@Override
+	public Point2D[] getControlPoints() {
+        return new Point2D[]{p1, c1, c2, p2};
+    }
 
 	@Override
 	public int hashCode() {
@@ -100,6 +124,12 @@ public class CubicBezierCurve extends BezierCurve {
 		return "CubicBezierCurve [p1=" + p1 + ", c1=" + c1 + ", c2=" + c2 + ", p2=" + p2 + "]";
 	}
 
+	/**
+	 * Computes the parameter matrix for efficient calculation of the full curve's position.
+	 * @param bezierFineness	the number of points to interpolate along the curve
+	 * @return A {@link SimpleMatrix} of row vectors [1, t, t^2, t^3] for all values t between 0 and 1, inclusive,
+	 * discretized into bezierFineness intervals
+	 */
 	private SimpleMatrix computeTMatrixPosition(int bezierFineness) {
     	double[] tVals = Utility.linspace(0, 1, bezierFineness + 1);
     	
@@ -115,6 +145,12 @@ public class CubicBezierCurve extends BezierCurve {
         return tCoefficientMatrix;
     }
         
+	/**
+	 * Computes the parameter matrix for efficient calculation of the full curve's velocity.
+	 * @param bezierFineness	the number of points to interpolate along the curve
+	 * @return A {@link SimpleMatrix} of row vectors [0, 1, 2t, 3t^2] for all values t between 0 and 1, inclusive,
+	 * discretized into bezierFineness intervals
+	 */
     private SimpleMatrix computeTMatrixVelocity(int bezierFineness) {
     	double[] tVals = Utility.linspace(0, 1, bezierFineness + 1);
     	
@@ -128,7 +164,13 @@ public class CubicBezierCurve extends BezierCurve {
         
         return tCoefficientMatrix;
     }
-        
+       
+    /**
+	 * Computes the parameter matrix for efficient calculation of the full curve's acceleration.
+	 * @param bezierFineness	the number of points to interpolate along the curve
+	 * @return A {@link SimpleMatrix} of row vectors [0, 0, 2, 6t] for all values t between 0 and 1, inclusive,
+	 * discretized into bezierFineness intervals
+	 */
     private SimpleMatrix computeTMatrixAcceleration(int bezierFineness) {
     	double[] tVals = Utility.linspace(0, 1, bezierFineness + 1);
     	
@@ -142,6 +184,10 @@ public class CubicBezierCurve extends BezierCurve {
         return tCoefficientMatrix;
     }
     
+    /**
+	 * Converts the control points into a matrix for efficient calculation.
+	 * @return A {@link SimpleMatrix} where each row is a control point.
+	 */
     private SimpleMatrix getControlCoordinateMatrix() {
     	return new SimpleMatrix(new double[][] {
     		{p1.getX(), p1.getY()}, 
@@ -150,7 +196,14 @@ public class CubicBezierCurve extends BezierCurve {
 			{p2.getX(), p2.getY()}
 		});
     }
-    
+   
+    /**
+     * Provides an array of points representing the position of the curve. The curve is discretely quantized by 
+     * bezierFineness regular intervals on the curve parameter t, bounded between 0 and 1, inclusive
+     * @param bezierFineness	the number of points to interpolate along the curve
+     * @return An array of {@link Point2D} objects of length bezierFineness + 1 representing (x,y) coordinates
+     * on the curve
+     */
     public Point2D[] computePosition(int bezierFineness) {
     	SimpleMatrix controlCoordinateMatrix = getControlCoordinateMatrix();
         SimpleMatrix positionMatrix = computeTMatrixPosition(bezierFineness).mult(Constants.CUBIC_POINT_COEFFICIENT_MATRIX).mult(controlCoordinateMatrix);
@@ -162,6 +215,12 @@ public class CubicBezierCurve extends BezierCurve {
         return positionArray;
     }
     
+    @Override
+    public Point2D[] computePosition() {
+    	return computePosition(this.getBezierFineness());
+    }
+    
+    @Override
     public Point2D computePositionAtT(double t) {
     	SimpleMatrix controlCoordinateMatrix = getControlCoordinateMatrix();
     	SimpleMatrix tPoint = new SimpleMatrix(new double[][] {
@@ -172,10 +231,13 @@ public class CubicBezierCurve extends BezierCurve {
         return new Point2D.Double(positionMatrix.get(0, 0), positionMatrix.get(0, 1));
     }
     
-    public Point2D[] computePosition() {
-    	return computePosition(this.getBezierFineness());
-    }
-    
+    /**
+     * Provides an array of points representing the velocity along the curve. The curve is discretely quantized by 
+     * bezierFineness regular intervals on the curve parameter t, bounded between 0 and 1, inclusive
+     * @param bezierFineness	the number of points to interpolate along the curve
+     * @return An array of {@link Point2D} objects of length bezierFineness + 1 representing velocities along
+     * the curve
+     */
     public Point2D[] computeVelocity(int bezierFineness) {
     	SimpleMatrix controlCoordinateMatrix = getControlCoordinateMatrix();
         SimpleMatrix velocityMatrix = computeTMatrixVelocity(bezierFineness).mult(Constants.CUBIC_POINT_COEFFICIENT_MATRIX).mult(controlCoordinateMatrix);
@@ -188,10 +250,23 @@ public class CubicBezierCurve extends BezierCurve {
         return velocityArray;
     }
 
+    /**
+     * Provides an array of points representing the velocity along the curve. The curve is discretely quantized by 
+     * bezierFineness regular intervals on the curve parameter t, bounded between 0 and 1, inclusive
+     * @return An array of {@link Point2D} objects of length bezierFineness + 1 representing velocities along
+     * the curve
+     */
     public Point2D[] computeVelocity() {
     	return computeVelocity(this.getBezierFineness());
     }
     
+    /**
+     * Provides an array of points representing the acceleration along the curve. The curve is discretely quantized by 
+     * bezierFineness regular intervals on the curve parameter t, bounded between 0 and 1, inclusive
+     * @param bezierFineness	the number of points to interpolate along the curve
+     * @return An array of {@link Point2D} objects of length bezierFineness + 1 representing acceleration along
+     * the curve
+     */
     public Point2D[] computeAcceleration(int bezierFineness) {
     	SimpleMatrix controlCoordinateMatrix = getControlCoordinateMatrix();
         SimpleMatrix accelerationMatrix = computeTMatrixAcceleration(bezierFineness).mult(Constants.CUBIC_POINT_COEFFICIENT_MATRIX).mult(controlCoordinateMatrix);
@@ -204,14 +279,17 @@ public class CubicBezierCurve extends BezierCurve {
         return accelerationArray;
     }
     
+    /**
+     * Provides an array of points representing the acceleration along the curve. The curve is discretely quantized by 
+     * bezierFineness regular intervals on the curve parameter t, bounded between 0 and 1, inclusive
+     * @return An array of {@link Point2D} objects of length bezierFineness + 1 representing acceleration along
+     * the curve
+     */
     public Point2D[] computeAcceleration() {
     	return computeAcceleration(this.getBezierFineness());
     }
-
-    public Point2D[] getControlPoints() {
-        return new Point2D[]{p1, c1, c2, p2};
-    }
     
+    @Override
     public Point2D[] computeLerpsAtT(double t) {
     	Point2D[] lerpsAtT = new Point2D[6];
     	
@@ -227,15 +305,9 @@ public class CubicBezierCurve extends BezierCurve {
     	return lerpsAtT;
     }
     
+    @Override
     public int getOrder() {
     	return 3;
-    }
-
-    public CubicBezierCurve centerAtP1() {
-    	double xDelta = p1.getX();
-    	double yDelta = p1.getY();
-    	translate(-xDelta, -yDelta);
-    	return this;
     }
     
 	@Override
@@ -246,6 +318,17 @@ public class CubicBezierCurve extends BezierCurve {
 		this.p2.setLocation(p2.getX() + xDelta, p2.getY() + yDelta);
 		return this;
 	}
+	
+	/**
+	 * Translates the coordinates of the curve such that the first endpoint (P1) is located at (0,0)
+	 * @return the translated CubicBezierCurve
+	 */
+	public CubicBezierCurve centerAtP1() {
+    	double xDelta = p1.getX();
+    	double yDelta = p1.getY();
+    	translate(-xDelta, -yDelta);
+    	return this;
+    }
 
 	@Override
 	public CubicBezierCurve reflect(double axisVectorX, double axisVectorY) {

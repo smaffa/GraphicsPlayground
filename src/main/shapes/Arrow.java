@@ -1,17 +1,26 @@
 package main.shapes;
 
-import java.awt.Color;
 import java.awt.geom.Point2D;
 
+/**
+ * Class for Arrows drawn onto a canvas. All transformations operate only on the underlying vector.
+ * @author smaffa
+ *
+ */
 public class Arrow extends AnnotationShape implements Transformable2D<Arrow> {
 
-	private double xStart;
-	private double yStart;
-	private double xVector;
-	private double yVector;
+	private double xStart; 
+	private double yStart; 
+	private double xVector; 
+	private double yVector; 
 	
-	private Color color = Color.BLACK;
-	
+	/**
+	 * Basic constructor for an Arrow based on its tail coordinates and vector.
+	 * @param xStart	the x coordinate of the tail
+	 * @param yStart	the y coordinate of the tail
+	 * @param xVector	the x component of the vector from the tail to the head
+	 * @param yVector	the y component of the vector from the tail to the head
+	 */
 	public Arrow(double xStart, double yStart, double xVector, double yVector) {
 		this.xStart = xStart;
 		this.yStart = yStart;
@@ -19,20 +28,18 @@ public class Arrow extends AnnotationShape implements Transformable2D<Arrow> {
 		this.yVector = yVector;
 	}
 	
-	public Arrow(double xStart, double yStart, double xVector, double yVector, Color c) {
-		this.xStart = xStart;
-		this.yStart = yStart;
-		this.xVector = xVector;
-		this.yVector = yVector;
-		this.color = c;
-	}
-	
+	/**
+	 * Copy constructor
+	 * @param other		another Arrow object
+	 */
 	public Arrow(Arrow other) {
 		this.xStart = other.getxStart();
 		this.yStart = other.getyStart();
 		this.xVector = other.getxVector();
 		this.yVector = other.getyVector();
-		this.color = other.getColor();
+		super.setColor(other.getColor());
+		super.setTraceStroke(other.getTraceStroke());
+		super.setShowShape(other.getShowShape());
 	}
 	
 	public double getxStart() {
@@ -67,17 +74,8 @@ public class Arrow extends AnnotationShape implements Transformable2D<Arrow> {
 		this.yVector = yVector;
 	}
 
-	public Color getColor() {
-		return color;
-	}
-
-	public void setColor(Color color) {
-		this.color = color;
-	}
-
 	@Override
 	public Point2D[] getTrace() {
-		// TODO Auto-generated method stub
 		Point2D[] trace = new Point2D[5];
 		trace[0] = new Point2D.Double(this.xStart, this.yStart);
 		trace[1] = new Point2D.Double(this.xStart + xVector, this.yStart + this.yVector);
