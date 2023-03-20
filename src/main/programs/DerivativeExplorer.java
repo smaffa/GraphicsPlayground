@@ -6,8 +6,6 @@ import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.GridLayout;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.awt.event.MouseAdapter;
@@ -16,7 +14,6 @@ import java.awt.geom.Point2D;
 import java.util.ArrayList;
 import java.util.Arrays;
 
-import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.JSlider;
@@ -29,11 +26,16 @@ import main.shapes.CubicBezierCurve;
 import main.shapes.Arrow;
 import main.shapes.PlotLine;
 import main.sketch.SketchPad;
-import main.sketch.plots.GraphicsPlot;
 import main.sketch.plots.LinePlot;
 import main.utils.Constants;
 import main.utils.Utility;
 
+/**
+ * A class for interactively visualizing the velocity of a curve in real time. Two plots (position and velocity)
+ * are displayed alongside an interactive curve whose control points can be adjusted.
+ * @author smaffa
+ *
+ */
 public class DerivativeExplorer implements Runnable {
 
 	private JFrame f = new JFrame();
@@ -45,6 +47,9 @@ public class DerivativeExplorer implements Runnable {
 	private JPanel controlPanel = new JPanel(new FlowLayout());
 	private double vectorScale = 1;
 	
+	/**
+	 * Default constructor for the DerivativeExplorer class
+	 */
 	public DerivativeExplorer() {
 		sketchPad.addRandomPoint();
 		sketchPad.addRandomPoint();

@@ -5,10 +5,6 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Container;
-import java.awt.Dimension;
-import java.awt.FlowLayout;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Stroke;
@@ -36,8 +32,14 @@ import main.shapes.RegularPolygon;
 import main.shapes.AnnotationShape;
 import main.sketch.SketchPad;
 import main.utils.Constants;
-import main.utils.Utility;
 
+/**
+ * A class for interactively playing with animation along a curve. The program allows the user to adjust the position
+ * of the curve in real time, update animation speeds, and explore two types of curve parameterizations: by arclength
+ * and by time.
+ * @author smaffa
+ *
+ */
 public class CurveRider implements Runnable {
 
 	private JFrame f = new JFrame();
@@ -52,17 +54,35 @@ public class CurveRider implements Runnable {
 	private int nPoints = 1;
 	private boolean showArcLengthParameterized = true;
 	
+	private final static Color DEFAULT_PRIMARY_T_COLOR = new Color(150, 0, 255);
+	private final static Color DEFAULT_SECONDARY_T_COLOR = Color.BLUE;
+	private final static int DEFAULT_T_RIDER_NSIDES = 3;
+	private final static double DEFAULT_T_RIDER_RADIUS = 5;
+	private final static double DEFAULT_T_RIDER_ORIENTATION = -Math.PI / 2;
+	
+	private final static Color DEFAULT_PRIMARY_S_COLOR = new Color(255, 100, 100);
+	private final static Color DEFAULT_SECONDARY_S_COLOR = new Color(255, 125, 50);
+	private final static int DEFAULT_S_RIDER_NSIDES = 4;
+	private final static double DEFAULT_S_RIDER_RADIUS = 5;
+	private final static double DEFAULT_S_RIDER_ORIENTATION = Math.PI / 4;
+	
+	private final static Stroke DEFAULT_PRIMARY_STROKE = new BasicStroke(5.0f);
+	private final static Stroke DEFAULT_SECONDARY_STROKE = new BasicStroke(3.0f);
+	
+	
 	private double[] cumulativeDistance;
 	
 	private Timer timer = new Timer(Constants.FRAME_DELAY_MS, new ActionListener() {
 		@Override
 		public void actionPerformed(ActionEvent e) {
-			baseT += tRate * Constants.FRAME_DELAY_MS / 1000;
+			//update the universal time parameter according to the rate and ensure it remains between 0 and 1
+			baseT += tRate * Constants.FRAME_DELAY_MS / Constants.MS_PER_S;
 			if (baseT > 1) {
 				baseT -= 1;
 			}
 			
-			baseS += sRate * Constants.FRAME_DELAY_MS / 1000;
+			//update the universal arclength parameter according to the rate and ensure it remains between 0 and 1
+			baseS += sRate * Constants.FRAME_DELAY_MS / Constants.MS_PER_S;
 			if (baseS > 1) {
 				baseS -= 1;
 			}
@@ -73,30 +93,35 @@ public class CurveRider implements Runnable {
 		}
 	});;
 	
+	/**
+	 * Default constructor for the CurveRider class
+	 */
 	public CurveRider() {
+		// instantiate 4 points and connect them into a curve
 		sketchPad.addRandomPoint();
 		sketchPad.addRandomPoint();
 		sketchPad.addRandomPoint();
 		sketchPad.addRandomPoint();
 		sketchPad.createBezierCurve(new ArrayList<Integer>(Arrays.asList(0, 1, 2, 3)));
 		curve = sketchPad.getBezierCurves().get(0);
-		cumulativeDistance = new double[curve.getBezierFineness() + 1];
+		cumulativeDistance = curve.computeCumulativeArcLengthDistance();
 		
-		computeArcLengthDistance();
 		realignPoints();
 		
+		// overwrite the sketchPad's mouse listener to additionally update the auxiliary curve data
 		sketchPad.addMouseMotionListener(new MouseAdapter() {
             @Override
             public void mouseDragged(MouseEvent e) {
                 if (sketchPad.isPointSelected()) {
                     sketchPad.movePoint(e.getX(), e.getY());
                     
-                    computeArcLengthDistance();
+                    cumulativeDistance = curve.computeCumulativeArcLengthDistance();
                     realignPoints();
                 }
             }
         });
 		
+		// a button that starts and pauses the animation
 		GridBagConstraints c = new GridBagConstraints();
 		c.fill = GridBagConstraints.VERTICAL;
 		c.gridx = 0;
@@ -116,6 +141,7 @@ public class CurveRider implements Runnable {
             }
         });
         
+        // a slider that controls the number of evenly-spaced points to display along the curve
         c.fill = GridBagConstraints.VERTICAL;
 		c.gridx = 1;
 		c.gridy = 0;
@@ -142,6 +168,7 @@ public class CurveRider implements Runnable {
         	}
         });
         
+        // a button that controls whether to display the points associated with the time parameter
         c.fill = GridBagConstraints.BOTH;
         c.weighty = 0.5;
 		c.gridx = 2;
@@ -167,6 +194,7 @@ public class CurveRider implements Runnable {
             }
         });
         
+        // a button that controls whether to display the points associated with the arclength parameter
         c.fill = GridBagConstraints.BOTH;
 		c.gridx = 2;
 		c.gridy = 1;
@@ -191,6 +219,7 @@ public class CurveRider implements Runnable {
             }
         });
         
+        // a slider that controls the animation speed of points along the curve
         c.fill = GridBagConstraints.VERTICAL;
 		c.gridx = 3;
 		c.gridy = 0;
@@ -219,69 +248,51 @@ public class CurveRider implements Runnable {
         	}
         });
         
-        // unused
-        JSlider tRateSlider = new JSlider(JSlider.HORIZONTAL, 0, 100, (int) Math.round(tRate * 100));
-        tRateSlider.setMajorTickSpacing(25);
-        tRateSlider.setMinorTickSpacing(5);
-        tRateSlider.setPaintTicks(true);
-        tRateSlider.setSnapToTicks(true);
-        tRateSlider.addChangeListener(new ChangeListener() {
-        	public void stateChanged(ChangeEvent e) {
-        		int tRateIdx = ((JSlider) e.getSource()).getValue();
-        		tRate = (double) tRateIdx / 100;
-        		
-        		realignPoints();
-        		
-        		sketchPad.repaint();
-        	}
-        });
+//        JSlider tRateSlider = new JSlider(JSlider.HORIZONTAL, 0, 100, (int) Math.round(tRate * 100));
+//        tRateSlider.setMajorTickSpacing(25);
+//        tRateSlider.setMinorTickSpacing(5);
+//        tRateSlider.setPaintTicks(true);
+//        tRateSlider.setSnapToTicks(true);
+//        tRateSlider.addChangeListener(new ChangeListener() {
+//        	public void stateChanged(ChangeEvent e) {
+//        		int tRateIdx = ((JSlider) e.getSource()).getValue();
+//        		tRate = (double) tRateIdx / 100;
+//        		
+//        		realignPoints();
+//        		
+//        		sketchPad.repaint();
+//        	}
+//        });
+//        
+//        JSlider sRateSlider = new JSlider(JSlider.HORIZONTAL, 0, 100, (int) Math.round(tRate * 100));
+//        sRateSlider.setMajorTickSpacing(25);
+//        sRateSlider.setMinorTickSpacing(5);
+//        sRateSlider.setPaintTicks(true);
+//        sRateSlider.setSnapToTicks(true);
+//        sRateSlider.addChangeListener(new ChangeListener() {
+//        	public void stateChanged(ChangeEvent e) {
+//        		int sRateIdx = ((JSlider) e.getSource()).getValue();
+//        		sRate = (double) sRateIdx / 100;
+//        		
+//        		realignPoints();
+//        		
+//        		sketchPad.repaint();
+//        	}
+//        });
         
-        JSlider sRateSlider = new JSlider(JSlider.HORIZONTAL, 0, 100, (int) Math.round(tRate * 100));
-        sRateSlider.setMajorTickSpacing(25);
-        sRateSlider.setMinorTickSpacing(5);
-        sRateSlider.setPaintTicks(true);
-        sRateSlider.setSnapToTicks(true);
-        sRateSlider.addChangeListener(new ChangeListener() {
-        	public void stateChanged(ChangeEvent e) {
-        		int sRateIdx = ((JSlider) e.getSource()).getValue();
-        		sRate = (double) sRateIdx / 100;
-        		
-        		realignPoints();
-        		
-        		sketchPad.repaint();
-        	}
-        });
-        
 	}
 	
-	public void computeArcLengthDistance() {
-		Point2D[] position = curve.computePosition();
-		cumulativeDistance[0] = 0;
-		for (int i = 1; i < position.length; i++) {
-			cumulativeDistance[i] = Math.sqrt(Math.pow(position[i].getX() - position[i-1].getX(), 2) + 
-					Math.pow(position[i].getY() - position[i-1].getY(), 2)) + cumulativeDistance[i-1];
-		}
-		for (int i = 1; i < position.length; i++) {
-			cumulativeDistance[i] = cumulativeDistance[i] / cumulativeDistance[cumulativeDistance.length-1];
-		}
-	}
-	
-	public double arcLengthApproximateT(double s) {
-		int maxIdxLessThan = 0;
-		int minIdxGreaterThan = cumulativeDistance.length - 1;
-		double sPartial = 0;
-		for (int i = 0; i < cumulativeDistance.length - 1; i++) {
-			if (cumulativeDistance[i] <= s & s <= cumulativeDistance[i+1]) {
-				maxIdxLessThan = i;
-				minIdxGreaterThan = i + 1;
-				sPartial = (s - cumulativeDistance[i]) / (cumulativeDistance[i+1] - cumulativeDistance[i]);
-			}
-		}
-		double tLow = (double) maxIdxLessThan / curve.getBezierFineness();
-		double tHigh = (double) minIdxGreaterThan / curve.getBezierFineness();
-		return Utility.lerp(tLow, tHigh, sPartial);
-	}
-	
+	/**
+	 * Creates a point that moves along the curve, represented as a {@link RegularPolygon} centered at the point.
+	 * @param x		the x coordinate of the point
+	 * @param y		the y coordinate of the point
+	 * @param nSides	the number of sides to the polygon representing the point
+	 * @param radius	the radius of the polygon representing the point
+	 * @param orientation	the angular orientation of the primary vertex of the polygon
+	 * @param c		the color of the polygon
+	 * @param stroke	the linestyle of the polygon's border
+	 * @return a {@link RegularPolygon} centered at (x,y) with the specified visual properties
+	 */
 	public static RegularPolygon makeRider(double x, double y, int nSides, double radius, double orientation, 
 			Color c, Stroke stroke) {
 		RegularPolygon polygon = new RegularPolygon(x, y, nSides, radius, orientation);
@@ -290,26 +301,43 @@ public class CurveRider implements Runnable {
 		return polygon;
 	}
 	
+	/**
+	 * Creates a point that moves along the curve, represented as a {@link RegularPolygon} centered at the point
+	 * with default styling.
+	 * @param x		the x coordinate of the point
+	 * @param y		the y coordinate of the point
+	 * @return a {@link RegularPolygon} centered at (x,y) with default visual properties
+	 */
 	public static RegularPolygon makeDefaultRider(double x, double y) {
-		return makeRider(x, y, 24, 5, 0, Color.BLUE, new BasicStroke(3.0f));
+		return makeRider(x, y, 24, DEFAULT_T_RIDER_RADIUS, 0, DEFAULT_PRIMARY_T_COLOR, DEFAULT_PRIMARY_STROKE);
 	}
 		
+
+	/**
+	 * Updates the stored data to recompute the position of all points along the curve corresponding to nPoints
+	 * evenly spaced intervals in the curve parameters.
+	 */
 	public void realignPoints() {
 		ArrayList<AnnotationShape> annotationShapes = sketchPad.getAnnotationShapes();
-		// trim the list to the appropriate size
+		// trim the list to the appropriate size (2 * nPoints, arranged by alternating t, s parameters)
 		while (annotationShapes.size() > 2 * nPoints) {
 			annotationShapes.remove(annotationShapes.size() - 1);
 		}
 		while (annotationShapes.size() < 2 * nPoints) {
-			annotationShapes.add(makeRider(0, 0, 3, 5, -Math.PI / 2, Color.BLUE, new BasicStroke(3.0f)));
-			annotationShapes.add(makeRider(0, 0, 4, 5, Math.PI / 4, new Color(255, 125, 50), new BasicStroke(3.0f)));
+			annotationShapes.add(makeRider(0, 0, DEFAULT_T_RIDER_NSIDES, DEFAULT_T_RIDER_RADIUS, 
+					DEFAULT_T_RIDER_ORIENTATION, DEFAULT_SECONDARY_T_COLOR, DEFAULT_SECONDARY_STROKE));
+			annotationShapes.add(makeRider(0, 0, DEFAULT_S_RIDER_NSIDES, DEFAULT_S_RIDER_RADIUS,
+					DEFAULT_S_RIDER_ORIENTATION, DEFAULT_SECONDARY_S_COLOR, DEFAULT_SECONDARY_STROKE));
 		}
 		
-		annotationShapes.get(0).setColor(new Color(150, 0, 255));
-		annotationShapes.get(0).setTraceStroke(new BasicStroke(5.0f));
-		annotationShapes.get(1).setColor(new Color(255, 100, 100));
-		annotationShapes.get(1).setTraceStroke(new BasicStroke(5.0f));
+		// set the visual specifications for the primary points
+		annotationShapes.get(0).setColor(DEFAULT_PRIMARY_T_COLOR);
+		annotationShapes.get(0).setTraceStroke(DEFAULT_PRIMARY_STROKE);
+		annotationShapes.get(1).setColor(DEFAULT_PRIMARY_S_COLOR);
+		annotationShapes.get(1).setTraceStroke(DEFAULT_PRIMARY_STROKE);
 		
+		// compute all offsets in t and s necessary to define nPoints and roll them into the domain [0, 1]
+		// then, compute the positions of the corresponding points
 		double offset = 1.0 / (double) nPoints;
 		for (int i = 0; i < nPoints; i++) {
 			double rolledT = baseT + (i * offset);
@@ -326,7 +354,7 @@ public class CurveRider implements Runnable {
 				rolledS -= 1;
 			}
 			
-			double arcLengthT = arcLengthApproximateT(rolledS);
+			double arcLengthT = curve.arcLengthApproximateT(this.cumulativeDistance, rolledS);
 			Point2D ptS = curve.computePositionAtT(arcLengthT);
 			((RegularPolygon) annotationShapes.get((2 * i) + 1)).setX(ptS.getX());
 			((RegularPolygon) annotationShapes.get((2 * i) + 1)).setY(ptS.getY());

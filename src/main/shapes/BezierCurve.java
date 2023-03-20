@@ -1,6 +1,7 @@
 package main.shapes;
 
 import main.utils.Constants;
+import main.utils.Utility;
 
 import java.awt.geom.Point2D;
 import java.util.Arrays;
@@ -51,6 +52,49 @@ public abstract class BezierCurve implements Transformable2D<BezierCurve> {
      * @return An integer value representing the order of the curve's polynomial
      */
     public abstract int getOrder();
+    
+    /**
+     * Provides an array representing the cumulative arc length distance from the first endpoint to the point
+     * represented by the curve parameter t for bezierFineness evenly spaced values of t.
+     * @return an array of double values representing distance from the first endpoint of the curve
+     */
+    public double[] computeCumulativeArcLengthDistance() {
+    	double[] cumulativeDistance = new double[this.bezierFineness + 1];
+    	Point2D[] position = this.computePosition();
+ 		cumulativeDistance[0] = 0;
+ 		for (int i = 1; i < position.length; i++) {
+ 			cumulativeDistance[i] = Math.sqrt(Math.pow(position[i].getX() - position[i-1].getX(), 2) + 
+ 					Math.pow(position[i].getY() - position[i-1].getY(), 2)) + cumulativeDistance[i-1];
+ 		}
+ 		for (int i = 1; i < position.length; i++) {
+ 			cumulativeDistance[i] = cumulativeDistance[i] / cumulativeDistance[cumulativeDistance.length-1];
+ 		}
+ 		return cumulativeDistance;
+    }
+    
+    /**
+     * Estimates the value of the curve parameter t which produces the point s proportion of the distance from 
+     * the first endpoint of the curve.
+     * @param cumulativeDistance	the array of values representing the distance from the endpoint 
+     * @param s		a double value between 0 and 1, inclusive, representing the proportion of the maximum
+     * distance along the curve
+     * @return a double approximation for the curve parameter t
+     */
+    public double arcLengthApproximateT(double[] cumulativeDistance, double s) {
+    	int maxIdxLessThan = 0;
+ 		int minIdxGreaterThan = cumulativeDistance.length - 1;
+ 		double sPartial = 0;
+ 		for (int i = 0; i < cumulativeDistance.length - 1; i++) {
+ 			if (cumulativeDistance[i] <= s & s <= cumulativeDistance[i+1]) {
+ 				maxIdxLessThan = i;
+ 				minIdxGreaterThan = i + 1;
+ 				sPartial = (s - cumulativeDistance[i]) / (cumulativeDistance[i+1] - cumulativeDistance[i]);
+ 			}
+ 		}
+ 		double tLow = (double) maxIdxLessThan / this.getBezierFineness();
+ 		double tHigh = (double) minIdxGreaterThan / this.getBezierFineness();
+ 		return Utility.lerp(tLow, tHigh, sPartial);
+    }
 
 	public int getBezierFineness() {
 		return bezierFineness;
