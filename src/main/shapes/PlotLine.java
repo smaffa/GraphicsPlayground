@@ -7,6 +7,12 @@ import java.util.Collection;
 
 import main.utils.Constants;
 
+/**
+ * A class for individual lines on a graph. Coordinate maxima are made accessible for ease of computing appropriate
+ * plot sizes
+ * @author smaffa
+ *
+ */
 public class PlotLine implements Transformable2D<PlotLine> {
 	
 	private ArrayList<Point2D> trace = new ArrayList<Point2D>(Constants.BEZIER_FINENESS);
@@ -16,6 +22,11 @@ public class PlotLine implements Transformable2D<PlotLine> {
 	private double maxY = Double.MIN_VALUE;
 	private Color color = Color.BLACK;
 	
+	/**
+	 * Basic constructor from a list of {@link Point2D} objects
+	 * @param trace		a {@link Collection} of {@link Point2D} objects representing the coordinates
+	 * of the line
+	 */
 	public PlotLine(Collection<Point2D> trace) {		
 		for (Point2D pt : trace) {
 			if (pt.getX() < this.minX) {
@@ -34,6 +45,12 @@ public class PlotLine implements Transformable2D<PlotLine> {
 		}
 	}
 	
+	/**
+	 * Full constructor from a collection of {@link Point2D} objects and a color
+	 * @param trace		a {@link Collection} of {@link Point2D} objects representing the coordinates
+	 * of the line
+	 * @param c		a {@link Color} object specifying the color of the line
+	 */
 	public PlotLine(Collection<Point2D> trace, Color c) {
 		this.color = c;
 		
@@ -54,6 +71,11 @@ public class PlotLine implements Transformable2D<PlotLine> {
 		}
 	}
 	
+	/**
+	 * Basic constructor from an array of {@link Point2D} objects
+	 * @param trace		an array of {@link Point2D} objects representing the coordinates
+	 * of the line
+	 */
 	public PlotLine(Point2D[] trace) {		
 		for (Point2D pt : trace) {
 			if (pt.getX() < this.minX) {
@@ -72,6 +94,12 @@ public class PlotLine implements Transformable2D<PlotLine> {
 		}
 	}
 	
+	/**
+	 * Full constructor from an array of {@link Point2D} objects and a color
+	 * @param trace		an array of {@link Point2D} objects representing the coordinates
+	 * of the line
+	 * @param c		a {@link Color} object specifying the color of the line
+	 */
 	public PlotLine(Point2D[] trace, Color c) {
 		this.color = c;
 		
@@ -92,6 +120,10 @@ public class PlotLine implements Transformable2D<PlotLine> {
 		}
 	}
 	
+	/**
+	 * Copy constructor
+	 * @param line	another PlotLine object
+	 */
 	public PlotLine(PlotLine line) {
 		for (Point2D pt : line.getTrace()) {
 			this.trace.add(new Point2D.Double(pt.getX(), pt.getY()));
@@ -131,6 +163,9 @@ public class PlotLine implements Transformable2D<PlotLine> {
 		return this.minY;
 	}
 	
+	/**
+	 * Reassigns the line's maxima by scanning the trace
+	 */
 	public void recomputeMaxima() {
 		this.minX = Double.MAX_VALUE;
 		this.minY = Double.MAX_VALUE;
@@ -153,6 +188,7 @@ public class PlotLine implements Transformable2D<PlotLine> {
 		}
 	}
 	
+	@Override
 	public String toString() {
 		return this.trace.toString();
 	}

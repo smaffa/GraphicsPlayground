@@ -1,9 +1,12 @@
 package main.utils;
 
-import java.awt.geom.Point2D;
-
 import org.ejml.simple.SimpleMatrix;
 
+/**
+ * A class defining global constants for GraphicsPlayground programs.
+ * @author smaffa
+ *
+ */
 public class Constants {
 
     public static final int BEZIER_FINENESS = 100;

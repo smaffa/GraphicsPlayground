@@ -3,12 +3,13 @@ package main.sketch;
 import main.shapes.AnnotationShape;
 import main.shapes.BezierCurve;
 import main.shapes.CubicBezierCurve;
-import main.shapes.PlotLine;
-import main.shapes.QuadraticBezierCurve;
 import main.utils.Constants;
 
-import javax.swing.*;
-import java.awt.*;
+import java.awt.BasicStroke;
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.geom.Ellipse2D;
@@ -17,6 +18,15 @@ import java.awt.geom.Point2D;
 import java.util.ArrayList;
 import java.util.concurrent.ThreadLocalRandom;
 
+import javax.swing.BorderFactory;
+import javax.swing.JPanel;
+
+/**
+ * A class for creating an interactive canvas on which points can be added, deleted, adjusted freely, and
+ * be connected into Bezier curves.
+ * @author smaffa
+ *
+ */
 public class SketchPad extends JPanel {
 
 	// point data
@@ -60,10 +70,36 @@ public class SketchPad extends JPanel {
     private int canvasWidth = Constants.CANVAS_WIDTH;
     private int canvasHeight = Constants.CANVAS_HEIGHT;
 
+    /**
+     * Default constructor for a SketchPad object
+     */
     public SketchPad() {
         setBorder(BorderFactory.createLineBorder(Color.BLACK));
 
-        addMouseListener(new MouseAdapter() {
+        registerPointSelectionListener();
+        registerDragMotionListener();
+    }
+    
+    /**
+     * Basic constructor for a SketchPad object with specified canvas height and width.
+     * @param width 	the width of the canvas
+     * @param height	the height of the canvas
+     */
+    public SketchPad(int width, int height) {
+    	this.canvasWidth = width;
+    	this.canvasHeight = height;
+    	
+        setBorder(BorderFactory.createLineBorder(Color.BLACK));
+
+        registerPointSelectionListener();
+        registerDragMotionListener();
+    }
+    
+    /**
+     * Registers a {@link MouseListener} object in the SketchPad which controls point selection.
+     */
+    public void registerPointSelectionListener() {
+    	addMouseListener(new MouseAdapter() {
             @Override
             public void mousePressed(MouseEvent e) {
                 if (isBezierCreationModeOn) {
@@ -88,8 +124,14 @@ public class SketchPad extends JPanel {
                 }
             }
         });
-
-        addMouseMotionListener(new MouseAdapter() {
+    }
+    
+    /**
+     * Registers a {@link MouseListener} object in the SketchPad which allows for dragging points around
+     * the canvas.
+     */
+    public void registerDragMotionListener() {
+    	addMouseMotionListener(new MouseAdapter() {
             @Override
             public void mouseDragged(MouseEvent e) {
                 if (selectedIndex != Constants.NULL_INDEX & selectedIndex < controlPoints.size()) {
@@ -98,54 +140,13 @@ public class SketchPad extends JPanel {
             }
         });
     }
-
-    public SketchPad(int width, int height) {
-    	this.canvasWidth = width;
-    	this.canvasHeight = height;
-    	
-        setBorder(BorderFactory.createLineBorder(Color.BLACK));
-
-        addMouseListener(new MouseAdapter() {
-            @Override
-            public void mousePressed(MouseEvent e) {
-                if (isBezierCreationModeOn) {
-                    int nextSelectionIndex = getBoundingPointIndex(e.getX(), e.getY());
-                    if (nextSelectionIndex != Constants.NULL_INDEX) {
-                        // if next selection is an already-selected point, remove it from the creation list
-                        if (currentBezierCreationList.contains(nextSelectionIndex)) {
-                            currentBezierCreationList.remove(Integer.valueOf(nextSelectionIndex));
-                        } else { // add it to the list
-                            currentBezierCreationList.add(nextSelectionIndex);
-                            if (currentBezierCreationList.size() == 4) {
-                                // if we reach 4 points, create the curve and reset the creation array
-                            	createBezierCurve(currentBezierCreationList);
-                                currentBezierCreationList.clear();
-                            }
-                        }
-                        repaint();
-                    }
-                } else {
-                    selectedIndex = getBoundingPointIndex(e.getX(), e.getY());
-                    repaint();
-                }
-            }
-        });
-
-        addMouseMotionListener(new MouseAdapter() {
-            @Override
-            public void mouseDragged(MouseEvent e) {
-                if (isPointSelected()) {
-                    movePoint(e.getX(), e.getY());
-                }
-            }
-        });
-    }
     
     /**
-     * Obtains the index in 'controlPoints' of the object which bounds the provided coordinates
-     *
-     * @return -1 if the coordinates are not within a saved Point2D object. Returns the index of the last bounding
-     * object if such an object in 'points' contains the coordinates.
+     * Obtains the index in the controlPoints {@link ArrayList} of the object which bounds the provided coordinates.
+     * @param x		the x coordinate to test
+     * @param y		the y coordinate to test
+     * @return the int index in controlPoints of the last bounding object if such an object exists. Otherwise,
+     * returns -1
      */
     private int getBoundingPointIndex(int x, int y) {
         for (int i = controlPoints.size() - 1; i > -1; i--) {
@@ -156,11 +157,22 @@ public class SketchPad extends JPanel {
         return Constants.NULL_INDEX;
     }
 
+    /**
+     * Sets the location of the current selected point.
+     * @param x		the destination x coordinate
+     * @param y		the destination y coordinate
+     */
     public void movePoint(int x, int y) {
         controlPoints.get(this.selectedIndex).setLocation(x, y);
         repaint();
     }
 
+    /**
+     * Instantiates a {@link CubicBezierCurve} object with the indices of 4 existing control points, and 
+     * adds it to the list of stored {@link BezierCurve} objects.
+     * @param controlIndices	an {@link ArrayList} of {@link Integer} objects representing indices in the
+     * controlPoints {@link ArrayList}
+     */
     public void createBezierCurve(ArrayList<Integer> controlIndices) {
     	if (controlIndices.size() == 4) {
     		bezierControlIndices.add(new ArrayList<Integer>(controlIndices));
@@ -171,6 +183,9 @@ public class SketchPad extends JPanel {
     	}
     }
     
+    /**
+     * Adds a point onto the canvas in a random location and sets it as the current selection.
+     */
     public void addRandomPoint() {
         int x = ThreadLocalRandom.current().nextInt(0, this.canvasWidth + 1);
         int y = ThreadLocalRandom.current().nextInt(0, this.canvasHeight + 1);
@@ -179,6 +194,9 @@ public class SketchPad extends JPanel {
         repaint();
     }
 
+    /**
+     * Removes the current selected point and all {@link BezierCurve} objects dependent on it.
+     */
     public void removeSelectedPoint() {
         if (selectedIndex != Constants.NULL_INDEX) {
             controlPoints.remove(selectedIndex);
@@ -203,6 +221,9 @@ public class SketchPad extends JPanel {
         repaint();
     }
     
+    /**
+     * Prints a string representation of the current state of the SketchPad object to System.out.
+     */
     public void printState() {
     	System.out.println("controlPoints:");
     	System.out.println(this.controlPoints.toString());
@@ -214,16 +235,25 @@ public class SketchPad extends JPanel {
     	System.out.println(this.globalT);
     }
 
+    /**
+     * Obtains the canvas dimensions
+     * @return a {@link Dimension} object representing the canvas's size
+     */
     public Dimension getPreferredSize() {
         return new Dimension(this.canvasWidth, this.canvasHeight);
     }
     
+    /**
+     * Draws a {@link BezierCurve} object onto the canvas.
+     * @param g2d	the {@link Graphics2D} object controlling the canvas rendering
+     * @param c		the {@link BezierCurve} object to be drawn
+     */
     public void drawBezierCurve(Graphics2D g2d, BezierCurve c) {
     	if (c instanceof CubicBezierCurve) {
     		g2d.setColor(bezierPalette[c.getOrder()]);
     		if (showReferenceLines) { // draw all control lines
     			g2d.setStroke(referenceStroke);    			
-    		} else { // draw only the 
+    		} else { // draw only the guiding tangent lines between control points
     			g2d.setStroke(dashed);
     		}
     		Point2D[] curveControls = c.getControlPoints();
@@ -262,6 +292,7 @@ public class SketchPad extends JPanel {
             	}
             }
             
+            // draw the curve itself
             g2d.setStroke(traceStroke);
             g2d.setColor(bezierPalette[0]);
             for (int i = 0; i < tracePoints.length - 1; i++) {
@@ -269,12 +300,19 @@ public class SketchPad extends JPanel {
                         tracePoints[i+1].getX(), tracePoints[i+1].getY()));
             }
             
-            if (showT) {
+            if (showT) { // highlight the point at t
             	drawPoint(g2d, c.computeLerpsAtT(globalT)[0], tPointColor, false);
             }
     	}
     }
     
+    /**
+     * Draws a {@link Point2D} object onto the canvas
+     * @param g2d	the {@link Graphics2D} object controlling the canvas rendering
+     * @param pt	the {@link Point2D} object
+     * @param color		the {@link Color} object specifying the color of the point
+     * @param fill	a boolean specifying if the point should be filled
+     */
     public void drawPoint(Graphics2D g2d, Point2D pt, Color color, boolean fill) {
     	double offset = Constants.POINT_RADIUS;
     	if (fill) {
@@ -288,6 +326,11 @@ public class SketchPad extends JPanel {
     	}
     }
     
+    /**
+     * Draws an {@link AnnotationShape} object onto the canvas
+     * @param g2d	the {@link Graphics2D} object controlling the canvas rendering
+     * @param ann	the {@link AnnotationShape} object to be drawn
+     */
     public void drawAnnotationShape(Graphics2D g2d, AnnotationShape ann) {
     	g2d.setColor(ann.getColor());
     	g2d.setStroke(ann.getTraceStroke());
