@@ -309,6 +309,25 @@ public class CubicBezierCurve extends BezierCurve {
         return new Point2D.Double(accelerationMatrix.get(0, 0), accelerationMatrix.get(0, 1));
     }
     
+    public double[] computeCurvature(int bezierFineness) {
+    	Point2D[] velocityArray = computeVelocity(bezierFineness);
+    	Point2D[] accelerationArray = computeAcceleration(bezierFineness);
+    	
+    	double[] curvatureArray = new double[bezierFineness + 1];
+    	for (int i = 0; i <= this.getBezierFineness(); i++) { 
+    		double determinant = (velocityArray[i].getX() * accelerationArray[i].getY()) - 
+        			(velocityArray[i].getY() * accelerationArray[i].getX());
+        	double vectorNorm = Utility.computeVectorNorm(velocityArray[i]);
+        	curvatureArray[i] = determinant / Math.pow(vectorNorm, 3);
+        }
+    	
+    	return curvatureArray;
+    }
+    
+    public double[] computeCurvature() {
+    	return computeCurvature(this.getBezierFineness());
+    }
+    
     public double computeCurvatureAtT(double t) {
     	Point2D velocityVector = computeVelocityAtT(t);
     	Point2D accelerationVector = computeAccelerationAtT(t);

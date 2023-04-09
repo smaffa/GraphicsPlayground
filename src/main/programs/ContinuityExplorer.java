@@ -27,6 +27,7 @@ import main.shapes.Arrow;
 import main.shapes.BezierCurve;
 import main.shapes.Circle;
 import main.shapes.CubicBezierCurve;
+import main.shapes.PolyLine;
 import main.shapes.RegularPolygon;
 import main.sketch.SketchPad;
 import main.sketch.plots.LinePlot;
@@ -53,6 +54,12 @@ public class ContinuityExplorer implements Runnable {
 	
 	private final static Color OSCULATING_CIRCLE_COLOR = Color.MAGENTA;
 	private final static Stroke OSCULATING_CIRCLE_STROKE = new BasicStroke(2.0f);
+	
+	private final static Color CURVATURE_COMB_COLOR = Color.GRAY;
+	private final static Stroke CURVATURE_COMB_STROKE  = new BasicStroke(1.0f);
+	
+	private int curvatureSubdivisions = 10;
+	private double curvatureCombScale = 5000;
 	
 	public ContinuityExplorer() {
 		int height = sketchPad.getCanvasHeight();
@@ -121,10 +128,47 @@ public class ContinuityExplorer implements Runnable {
 	
 	public void updateGlobalTAnnotations(boolean showT) {
 		sketchPad.getAnnotationShapes().clear();
+		ArrayList<BezierCurve> curves = sketchPad.getBezierCurves();
+		
+		for (int i = 0; i < curves.size(); i++) {
+			BezierCurve currentCurve = curves.get(i);
+			Point2D[] curvePosition = currentCurve.computePosition();
+			Point2D[] curveVelocity = ((CubicBezierCurve) currentCurve).computeVelocity();
+			
+			double[] curveCurvature = ((CubicBezierCurve) currentCurve).computeCurvature();
+			Point2D[] curvatureCombShaft = new Point2D[curveCurvature.length];
+			
+			for (int j = 0; j < curveCurvature.length; j++) {
+				Point2D tangentVector = Utility.normalizeVector(curveVelocity[j]);
+				Point2D normalVector = new Point2D.Double(-tangentVector.getY(), tangentVector.getX());
+				
+				// curvature comb positions are c(t) = x(t) - d * K(t) * n(t)
+				// TODO: try applying a monotonic transformation to K(t); maybe arctan?
+				Point2D curvatureCombVector = Utility.scaleVector(normalVector, this.curvatureCombScale * curveCurvature[j]);
+				curvatureCombShaft[j] = new Point2D.Double(curvePosition[j].getX() - curvatureCombVector.getX(), 
+						curvePosition[j].getY() + curvatureCombVector.getY());	
+				
+				if (j % this.curvatureSubdivisions == 0) {
+					PolyLine combTooth = new PolyLine(new Point2D[] {
+							curvePosition[j],
+							curvatureCombShaft[j]	
+					});
+					combTooth.setTraceStroke(CURVATURE_COMB_STROKE);
+					combTooth.setColor(CURVATURE_COMB_COLOR);
+					sketchPad.getAnnotationShapes().add(combTooth);
+				}
+			}
+			
+			PolyLine curvatureComb = new PolyLine(curvatureCombShaft);
+			curvatureComb.setTraceStroke(CURVATURE_COMB_STROKE);
+			curvatureComb.setColor(CURVATURE_COMB_COLOR);
+			
+			sketchPad.getAnnotationShapes().add(curvatureComb);
+		}
 		
 		if (showT) {
 			int currentCurveIndex = getCurveIndex(this.globalT);
-			BezierCurve currentCurve = sketchPad.getBezierCurves().get(currentCurveIndex);
+			BezierCurve currentCurve = curves.get(currentCurveIndex);
 			Point2D currentPt = computePositionAtGlobalT(this.globalT);
 			double curveT = this.globalT - (double) currentCurveIndex;
 			
@@ -149,10 +193,13 @@ public class ContinuityExplorer implements Runnable {
 			normalArrow.setTraceStroke(NORMAL_STROKE);
 			normalArrow.setColor(NORMAL_COLOR);
 			
-			//TODO: change to polyline
-			Arrow osculatingArrow = new Arrow(currentPt, osculatingRadiusVector);
-			osculatingArrow.setTraceStroke(OSCULATING_CIRCLE_STROKE);
-			osculatingArrow.setColor(OSCULATING_CIRCLE_COLOR);
+			PolyLine osculatingRadius = new PolyLine(new Point2D[] {
+					new Point2D.Double(currentPt.getX(), currentPt.getY()),
+					new Point2D.Double(currentPt.getX() + osculatingRadiusVector.getX(), 
+							currentPt.getY() + osculatingRadiusVector.getY())
+			});
+			osculatingRadius.setTraceStroke(OSCULATING_CIRCLE_STROKE);
+			osculatingRadius.setColor(OSCULATING_CIRCLE_COLOR);
 			
 			Circle osculatingCircle = new Circle(currentPt.getX() + osculatingRadiusVector.getX(), 
 					currentPt.getY() + osculatingRadiusVector.getY(), Utility.computeVectorNorm(osculatingRadiusVector));
@@ -162,7 +209,7 @@ public class ContinuityExplorer implements Runnable {
 			sketchPad.getAnnotationShapes().add(rider);
 			sketchPad.getAnnotationShapes().add(tangentArrow);
 			sketchPad.getAnnotationShapes().add(normalArrow);
-			sketchPad.getAnnotationShapes().add(osculatingArrow);
+			sketchPad.getAnnotationShapes().add(osculatingRadius);
 			sketchPad.getAnnotationShapes().add(osculatingCircle);
 		}
 	}
