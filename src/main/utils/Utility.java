@@ -116,4 +116,31 @@ public class Utility {
 	public static int imputeTIndex(double t, int length) {
 		return (int) Math.round(t * (length - 1));
 	}
+	
+	public static Point2D scaleVector(Point2D vector, double scale) {
+		return new Point2D.Double(scale * vector.getX(), scale * vector.getY());
+	}
+	
+	public static Point2D scaleVector(double xDelta, double yDelta, double scale) {
+		return new Point2D.Double(scale * xDelta, scale * yDelta);
+	}
+	
+	public static double computeVectorNorm(Point2D vector) {
+		return Math.sqrt(Math.pow(vector.getX(), 2) + Math.pow(vector.getY(), 2));
+	}
+	
+	public static double computeVectorNorm(double xDelta, double yDelta) {
+		return Math.sqrt(Math.pow(xDelta, 2) + Math.pow(yDelta, 2));
+	}
+	
+	public static Point2D normalizeVector(Point2D vector) {
+		double norm = computeVectorNorm(vector.getX(), vector.getY());
+		return new Point2D.Double(vector.getX() / norm, vector.getY() / norm);
+	}
+	
+	public static Point2D normalizeVector(double xDelta, double yDelta) {
+		double norm = computeVectorNorm(xDelta, yDelta);
+		return new Point2D.Double(xDelta / norm, yDelta / norm);
+	}
+	
 }

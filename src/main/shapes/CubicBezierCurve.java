@@ -260,6 +260,16 @@ public class CubicBezierCurve extends BezierCurve {
     	return computeVelocity(this.getBezierFineness());
     }
     
+    public Point2D computeVelocityAtT(double t) {
+    	SimpleMatrix controlCoordinateMatrix = getControlCoordinateMatrix();
+    	SimpleMatrix tPoint = new SimpleMatrix(new double[][] {
+    		{0, 1, 2 * t, 3 * Math.pow(t, 2)}
+    	});
+        SimpleMatrix velocityMatrix = tPoint.mult(Constants.CUBIC_POINT_COEFFICIENT_MATRIX).mult(controlCoordinateMatrix);
+        
+        return new Point2D.Double(velocityMatrix.get(0, 0), velocityMatrix.get(0, 1));
+    }
+    
     /**
      * Provides an array of points representing the acceleration along the curve. The curve is discretely quantized by 
      * bezierFineness regular intervals on the curve parameter t, bounded between 0 and 1, inclusive
@@ -287,6 +297,27 @@ public class CubicBezierCurve extends BezierCurve {
      */
     public Point2D[] computeAcceleration() {
     	return computeAcceleration(this.getBezierFineness());
+    }
+    
+    public Point2D computeAccelerationAtT(double t) {
+    	SimpleMatrix controlCoordinateMatrix = getControlCoordinateMatrix();
+    	SimpleMatrix tPoint = new SimpleMatrix(new double[][] {
+    		{0, 0, 2, 6 * t}
+    	});
+        SimpleMatrix accelerationMatrix = tPoint.mult(Constants.CUBIC_POINT_COEFFICIENT_MATRIX).mult(controlCoordinateMatrix);
+        
+        return new Point2D.Double(accelerationMatrix.get(0, 0), accelerationMatrix.get(0, 1));
+    }
+    
+    public double computeCurvatureAtT(double t) {
+    	Point2D velocityVector = computeVelocityAtT(t);
+    	Point2D accelerationVector = computeAccelerationAtT(t);
+    	
+    	double determinant = (velocityVector.getX() * accelerationVector.getY()) - 
+    			(velocityVector.getY() * accelerationVector.getX());
+    	double vectorNorm = Utility.computeVectorNorm(velocityVector);
+    	
+    	return determinant / Math.pow(vectorNorm, 3);
     }
     
     @Override

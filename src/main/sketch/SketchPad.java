@@ -2,6 +2,7 @@ package main.sketch;
 
 import main.shapes.AnnotationShape;
 import main.shapes.BezierCurve;
+import main.shapes.Circle;
 import main.shapes.CubicBezierCurve;
 import main.utils.Constants;
 
@@ -10,6 +11,7 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.awt.Shape;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.geom.Ellipse2D;
@@ -193,6 +195,19 @@ public class SketchPad extends JPanel {
         selectedIndex = controlPoints.size() - 1;
         repaint();
     }
+    
+    /**
+     * Adds a point onto the canvas in a random location within specific bounds and sets it as the current selection.
+     * @param xMin, xMax	the bounds on the x coordinate
+     * @param yMin, yMax	the bounds on the y coordinate
+     */
+    public void addRandomPoint(int xMin, int yMin, int xMax, int yMax) {
+        int x = ThreadLocalRandom.current().nextInt(xMin, xMax);
+        int y = ThreadLocalRandom.current().nextInt(yMin, yMax);
+        controlPoints.add(new CanvasPoint(x, y));
+        selectedIndex = controlPoints.size() - 1;
+        repaint();
+    }
 
     /**
      * Removes the current selected point and all {@link BezierCurve} objects dependent on it.
@@ -335,12 +350,23 @@ public class SketchPad extends JPanel {
     	g2d.setColor(ann.getColor());
     	g2d.setStroke(ann.getTraceStroke());
     	
-    	Point2D[] tracePoints = ann.getTrace();
-    	
-    	for (int i = 0; i < tracePoints.length - 1; i++) {
-            g2d.draw(new Line2D.Double(tracePoints[i].getX(), tracePoints[i].getY(),
-                    tracePoints[i+1].getX(), tracePoints[i+1].getY()));
-        }
+    	if (ann instanceof Circle) {
+    		Circle annCircle = (Circle) ann;
+    		Shape circle = new Ellipse2D.Double(annCircle.getX() - annCircle.getRadius(), annCircle.getY() - annCircle.getRadius(), 
+    				2.0 * annCircle.getRadius(), 2.0 * annCircle.getRadius());
+			if (annCircle.isFill()) {
+				g2d.fill(circle);
+			} else {
+				g2d.draw(circle);
+			}
+		} else {
+	    	Point2D[] tracePoints = ann.getTrace();
+	    	
+	    	for (int i = 0; i < tracePoints.length - 1; i++) {
+	            g2d.draw(new Line2D.Double(tracePoints[i].getX(), tracePoints[i].getY(),
+	                    tracePoints[i+1].getX(), tracePoints[i+1].getY()));
+	        }
+		}
     }
 
     @Override

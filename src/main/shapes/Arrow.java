@@ -28,6 +28,13 @@ public class Arrow extends AnnotationShape implements Transformable2D<Arrow> {
 		this.yVector = yVector;
 	}
 	
+	public Arrow(Point2D base, Point2D vector) {
+		this.xStart = base.getX();
+		this.yStart = base.getY();
+		this.xVector = vector.getX();
+		this.yVector = vector.getY();
+	}
+	
 	/**
 	 * Copy constructor
 	 * @param other		another Arrow object
